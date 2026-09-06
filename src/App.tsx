@@ -84,7 +84,7 @@ function MainAppContent() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#061B16] text-[#F5F7F6] flex overflow-x-hidden">
+    <div className="min-h-screen w-full bg-[#070709] text-[#F5F5F7] flex overflow-x-hidden">
       {/* Desktop Sidebar (Left side, sticky) */}
       <DesktopSidebar />
 
@@ -94,11 +94,11 @@ function MainAppContent() {
         <AppHeader />
 
         {/* Global Screen Switcher Chip for Instant Evaluation/Testing */}
-        <div className="bg-[#0B2822]/60 border-b border-[#19D66B]/15 px-4 py-1.5 flex items-center justify-between text-[11px] select-none">
-          <div className="flex items-center gap-1.5 text-[#A9B8B3]">
-            <span className="w-2 h-2 rounded-full bg-[#19D66B] animate-pulse" />
+        <div className="bg-[#140F18]/80 border-b border-white/10 px-4 py-1.5 flex items-center justify-between text-[11px] select-none">
+          <div className="flex items-center gap-1.5 text-[#A09CA8]">
+            <span className="w-2 h-2 rounded-full bg-[#FF1E42] animate-pulse" />
             <span className="font-semibold">Screen:</span>
-            <span className="font-bold text-[#B8F500] uppercase font-mono">{currentView}</span>
+            <span className="font-bold text-[#FFA000] uppercase font-mono">{currentView}</span>
           </div>
 
           <div className="flex items-center gap-1">
@@ -106,7 +106,7 @@ function MainAppContent() {
               type="button"
               onClick={() => setCurrentView('splash')}
               title="Test Screen 01 Preloader"
-              className="px-2 py-0.5 rounded-md bg-[#10352D] hover:bg-[#19D66B]/20 text-[10px] font-bold text-[#A9B8B3] hover:text-[#B8F500] transition-colors"
+              className="px-2 py-0.5 rounded-md bg-[#1F1422] hover:bg-[#FF1E42]/20 text-[10px] font-bold text-[#A09CA8] hover:text-[#FFA000] transition-colors"
             >
               Splash
             </button>
@@ -114,7 +114,7 @@ function MainAppContent() {
               type="button"
               onClick={() => setCurrentView('onboarding')}
               title="Test Screen 02 Onboarding"
-              className="px-2 py-0.5 rounded-md bg-[#10352D] hover:bg-[#19D66B]/20 text-[10px] font-bold text-[#A9B8B3] hover:text-[#B8F500] transition-colors"
+              className="px-2 py-0.5 rounded-md bg-[#1F1422] hover:bg-[#FF1E42]/20 text-[10px] font-bold text-[#A09CA8] hover:text-[#FFA000] transition-colors"
             >
               Intro
             </button>
@@ -122,7 +122,7 @@ function MainAppContent() {
               type="button"
               onClick={() => setCurrentView('auth')}
               title="Test Screen 03 Login/Signup"
-              className="px-2 py-0.5 rounded-md bg-[#10352D] hover:bg-[#19D66B]/20 text-[10px] font-bold text-[#A9B8B3] hover:text-[#B8F500] transition-colors"
+              className="px-2 py-0.5 rounded-md bg-[#1F1422] hover:bg-[#FF1E42]/20 text-[10px] font-bold text-[#A09CA8] hover:text-[#FFA000] transition-colors"
             >
               Auth
             </button>
@@ -130,7 +130,7 @@ function MainAppContent() {
               type="button"
               onClick={() => setCurrentView('business-setup')}
               title="Test Screen 04 Business Setup"
-              className="px-2 py-0.5 rounded-md bg-[#10352D] hover:bg-[#19D66B]/20 text-[10px] font-bold text-[#A9B8B3] hover:text-[#B8F500] transition-colors"
+              className="px-2 py-0.5 rounded-md bg-[#1F1422] hover:bg-[#FF1E42]/20 text-[10px] font-bold text-[#A09CA8] hover:text-[#FFA000] transition-colors"
             >
               Setup
             </button>
@@ -138,7 +138,7 @@ function MainAppContent() {
               type="button"
               onClick={() => setCurrentView('create-bill')}
               title="Go to Smart Billing"
-              className="px-2 py-0.5 rounded-md bg-[#19D66B] text-[10px] font-bold text-[#061B16]"
+              className="px-2 py-0.5 rounded-md btn-primary-gradient text-[10px] font-bold text-white shadow-sm"
             >
               POS
             </button>

@@ -49,17 +49,17 @@ export function DesktopSidebar() {
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen bg-[#0B2822] border-r border-[#19D66B]/15 text-[#F5F7F6] sticky top-0 z-30 select-none">
+    <aside className="hidden lg:flex flex-col w-64 h-screen bg-[#100C14] border-r border-white/10 text-[#F5F5F7] sticky top-0 z-30 select-none">
       {/* Brand Header */}
-      <div className="p-5 border-b border-[#19D66B]/15">
+      <div className="p-5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <BillKartLogo size="sm" showTagline={false} showScript={false} animate={false} />
+          <BillKartLogo size="sm" showTagline={false} showScript={false} animate={false} horizontal={true} />
           <div className="flex-1 min-w-0">
-            <span className="text-xs font-bold font-display text-[#F5F7F6] block truncate">
+            <span className="text-xs font-bold font-display text-white block truncate">
               {business.shopName}
             </span>
-            <div className="flex items-center gap-1.5 text-[10px] text-[#57E39B]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#19D66B] animate-pulse" />
+            <div className="flex items-center gap-1.5 text-[10px] text-[#FFA000]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E42] animate-pulse" />
               <span>POS Terminal Active</span>
             </div>
           </div>
@@ -80,16 +80,16 @@ export function DesktopSidebar() {
               onClick={() => handleNavClick(item)}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 group ${
                 isActive
-                  ? 'bg-gradient-to-r from-[#10352D] to-[#10352D]/80 text-[#B8F500] border border-[#19D66B]/30 shadow-[0_4px_14px_rgba(25,214,107,0.15)]'
-                  : 'text-[#A9B8B3] hover:text-[#F5F7F6] hover:bg-[#10352D]/50'
+                  ? 'bg-[#27131F] text-[#FFA000] border border-[#FF1E42]/35 shadow-[0_4px_14px_rgba(255,30,66,0.18)]'
+                  : 'text-[#A09CA8] hover:text-white hover:bg-[#1C121D]'
               }`}
             >
               <div className="flex items-center gap-3">
                 <div
                   className={`p-1.5 rounded-xl transition-colors ${
                     isActive
-                      ? 'bg-[#19D66B]/20 text-[#B8F500]'
-                      : 'text-[#A9B8B3] group-hover:text-[#57E39B]'
+                      ? 'bg-[#FF1E42]/20 text-[#FFA000]'
+                      : 'text-[#A09CA8] group-hover:text-[#FF4A6B]'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -98,13 +98,13 @@ export function DesktopSidebar() {
               </div>
 
               {item.badge && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#19D66B] text-[#061B16]">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF1E42] text-white">
                   {item.badge}
                 </span>
               )}
 
               {isActive && (
-                <ChevronRight className="w-3.5 h-3.5 text-[#B8F500]" />
+                <ChevronRight className="w-3.5 h-3.5 text-[#FFA000]" />
               )}
             </button>
           );
@@ -112,15 +112,15 @@ export function DesktopSidebar() {
       </nav>
 
       {/* Quick POS Terminal Card in sidebar */}
-      <div className="p-3 m-3 rounded-2xl bg-[#061B16]/80 border border-[#19D66B]/20">
+      <div className="p-3 m-3 rounded-2xl bg-[#18111D] border border-white/10">
         <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-[#A9B8B3]">Active Cart</span>
-          <span className="font-bold text-[#57E39B]">{cartItems.length} items</span>
+          <span className="text-[#A09CA8]">Active Cart</span>
+          <span className="font-bold text-[#FFA000]">{cartItems.length} items</span>
         </div>
         <button
           type="button"
           onClick={() => setCurrentView('create-bill')}
-          className="w-full py-2 rounded-xl bg-gradient-to-r from-[#19D66B] to-[#B8F500] text-[#061B16] font-bold text-xs shadow-md hover:brightness-110 transition-all flex items-center justify-center gap-1.5"
+          className="w-full py-2 rounded-xl btn-primary-gradient text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5"
         >
           <ReceiptText className="w-3.5 h-3.5" />
           <span>Go to Billing</span>
@@ -128,14 +128,14 @@ export function DesktopSidebar() {
       </div>
 
       {/* Bottom Profile Footer */}
-      <div className="p-3.5 border-t border-[#19D66B]/15 flex items-center justify-between text-xs">
+      <div className="p-3.5 border-t border-white/10 flex items-center justify-between text-xs">
         <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-[#10352D] border border-[#19D66B]/30 flex items-center justify-center font-bold text-[#57E39B]">
-            {business.ownerName ? business.ownerName[0] : 'R'}
+          <div className="w-8 h-8 rounded-full bg-[#27131F] border border-[#FF1E42]/30 flex items-center justify-center font-bold text-[#FFA000]">
+            {business.ownerName ? business.ownerName[0] : 'S'}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-bold text-[#F5F7F6] truncate">{business.ownerName}</p>
-            <p className="text-[10px] text-[#A9B8B3] truncate">{business.phone}</p>
+            <p className="text-xs font-bold text-white truncate">{business.ownerName}</p>
+            <p className="text-[10px] text-[#A09CA8] truncate">{business.phone}</p>
           </div>
         </div>
       </div>

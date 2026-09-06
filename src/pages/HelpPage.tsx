@@ -48,50 +48,50 @@ export function HelpPage() {
     <div className="p-4 sm:p-6 max-w-4xl mx-auto space-y-6 select-none pb-24 lg:pb-8">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold font-display text-[#F5F7F6]">
+        <h2 className="text-xl font-bold font-display text-white">
           BillKart Help Center & User Guide
         </h2>
-        <p className="text-xs text-[#A9B8B3]">
+        <p className="text-xs text-[#A09CA8]">
           Quick start guides, hardware tips, and merchant support
         </p>
       </div>
 
       {/* 3 Quick Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 space-y-2">
-          <div className="w-8 h-8 rounded-xl bg-[#10352D] flex items-center justify-center text-[#B8F500]">
+        <div className="p-4 rounded-3xl bg-[#140F18] border border-white/10 space-y-2">
+          <div className="w-8 h-8 rounded-xl bg-[#1F1422] flex items-center justify-center text-[#FFA000]">
             <Barcode className="w-4 h-4" />
           </div>
-          <h3 className="text-xs font-bold text-[#F5F7F6]">Barcode Scanning</h3>
-          <p className="text-[11px] text-[#A9B8B3] leading-relaxed">
-            Ensure good ambient lighting. Hold the camera 10–15 cm away from the barcode until the green reticle locks in.
+          <h3 className="text-xs font-bold text-white">Barcode Scanning</h3>
+          <p className="text-[11px] text-[#A09CA8] leading-relaxed">
+            Ensure good ambient lighting. Hold the camera 10–15 cm away from the barcode until the red reticle locks in.
           </p>
         </div>
 
-        <div className="p-4 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 space-y-2">
-          <div className="w-8 h-8 rounded-xl bg-[#10352D] flex items-center justify-center text-[#57E39B]">
+        <div className="p-4 rounded-3xl bg-[#140F18] border border-white/10 space-y-2">
+          <div className="w-8 h-8 rounded-xl bg-[#1F1422] flex items-center justify-center text-[#FF4A6B]">
             <QrCode className="w-4 h-4" />
           </div>
-          <h3 className="text-xs font-bold text-[#F5F7F6]">UPI Collections</h3>
-          <p className="text-[11px] text-[#A9B8B3] leading-relaxed">
+          <h3 className="text-xs font-bold text-white">UPI Collections</h3>
+          <p className="text-[11px] text-[#A09CA8] leading-relaxed">
             Verify your UPI ID in Settings. Customers can pay using any standard UPI app in India with zero transaction fee.
           </p>
         </div>
 
-        <div className="p-4 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 space-y-2">
-          <div className="w-8 h-8 rounded-xl bg-[#10352D] flex items-center justify-center text-[#B8F500]">
+        <div className="p-4 rounded-3xl bg-[#140F18] border border-white/10 space-y-2">
+          <div className="w-8 h-8 rounded-xl bg-[#1F1422] flex items-center justify-center text-[#FFA000]">
             <Printer className="w-4 h-4" />
           </div>
-          <h3 className="text-xs font-bold text-[#F5F7F6]">Thermal Printing</h3>
-          <p className="text-[11px] text-[#A9B8B3] leading-relaxed">
+          <h3 className="text-xs font-bold text-white">Thermal Printing</h3>
+          <p className="text-[11px] text-[#A09CA8] leading-relaxed">
             Use standard 2-inch or 3-inch roll thermal paper. WhatsApp invoices can also be shared directly without paper waste.
           </p>
         </div>
       </div>
 
       {/* Frequently Asked Questions */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-[#0B2822] border border-[#19D66B]/25 shadow-xl space-y-3">
-        <h3 className="font-bold text-sm text-[#F5F7F6] pb-2 border-b border-[#19D66B]/15">
+      <div className="p-5 sm:p-6 rounded-3xl bg-[#140F18] border border-white/10 shadow-xl space-y-3">
+        <h3 className="font-bold text-sm text-white pb-2 border-b border-white/10">
           Frequently Asked Questions
         </h3>
 
@@ -101,22 +101,22 @@ export function HelpPage() {
             return (
               <div
                 key={idx}
-                className="rounded-2xl bg-[#061B16] border border-[#19D66B]/15 overflow-hidden transition-colors"
+                className="rounded-2xl bg-[#100C14] border border-white/10 overflow-hidden transition-colors"
               >
                 <button
                   type="button"
                   onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                  className="w-full p-3.5 text-left flex items-center justify-between text-xs font-bold text-[#F5F7F6] hover:text-[#B8F500]"
+                  className="w-full p-3.5 text-left flex items-center justify-between text-xs font-bold text-white hover:text-[#FFA000]"
                 >
                   <span>{faq.q}</span>
                   {isOpen ? (
-                    <ChevronUp className="w-4 h-4 text-[#57E39B]" />
+                    <ChevronUp className="w-4 h-4 text-[#FF4A6B]" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-[#A9B8B3]" />
+                    <ChevronDown className="w-4 h-4 text-[#A09CA8]" />
                   )}
                 </button>
                 {isOpen && (
-                  <div className="px-3.5 pb-3.5 text-xs text-[#A9B8B3] leading-relaxed border-t border-[#19D66B]/10 pt-2">
+                  <div className="px-3.5 pb-3.5 text-xs text-[#A09CA8] leading-relaxed border-t border-white/10 pt-2">
                     {faq.a}
                   </div>
                 )}
@@ -127,17 +127,17 @@ export function HelpPage() {
       </div>
 
       {/* Support Card */}
-      <div className="p-5 rounded-3xl bg-gradient-to-r from-[#10352D] to-[#0B2822] border border-[#19D66B]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-3xl bg-[#1F1422] border border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h4 className="text-sm font-bold text-[#F5F7F6]">Need direct technical support?</h4>
-          <p className="text-xs text-[#A9B8B3]">Our Indian retail POS specialists are available 7 days a week.</p>
+          <h4 className="text-sm font-bold text-white">Need direct technical support?</h4>
+          <p className="text-xs text-[#A09CA8]">Our Indian retail POS specialists are available 7 days a week.</p>
         </div>
         <div className="flex items-center gap-2">
           <a
             href="mailto:support@billkart.in"
-            className="px-4 py-2 rounded-xl bg-[#061B16] hover:bg-[#10352D] text-xs font-bold text-[#F5F7F6] border border-[#19D66B]/25 flex items-center gap-1.5"
+            className="px-4 py-2 rounded-xl bg-[#140F18] hover:bg-[#25152A] text-xs font-bold text-white border border-white/15 flex items-center gap-1.5"
           >
-            <Mail className="w-3.5 h-3.5 text-[#57E39B]" />
+            <Mail className="w-3.5 h-3.5 text-[#FF4A6B]" />
             <span>support@billkart.in</span>
           </a>
         </div>

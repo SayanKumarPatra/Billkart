@@ -94,29 +94,29 @@ Thank You For Visiting Us!
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative w-full max-w-lg bg-[#061B16] rounded-3xl border border-[#19D66B]/30 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col print:border-none print:shadow-none print:max-h-full print:bg-white"
+        className="relative w-full max-w-lg bg-[#100C14] rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col print:border-none print:shadow-none print:max-h-full print:bg-white"
       >
         {/* Header Modal Bar */}
-        <div className="px-5 py-3.5 border-b border-[#19D66B]/20 bg-[#0B2822] flex items-center justify-between print:hidden">
+        <div className="px-5 py-3.5 border-b border-white/10 bg-[#140F18] flex items-center justify-between print:hidden">
           <div className="flex items-center gap-2">
-            <Receipt className="w-4 h-4 text-[#B8F500]" />
-            <h3 className="font-bold text-sm text-[#F5F7F6] font-display">Tax Invoice / Bill</h3>
+            <Receipt className="w-4 h-4 text-[#FFA000]" />
+            <h3 className="font-bold text-sm text-white font-display">Tax Invoice / Bill</h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-[#10352D] text-[#A9B8B3] hover:text-[#F5F7F6]"
+            className="p-1.5 rounded-xl bg-[#1F1422] text-[#A09CA8] hover:text-white"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Action Buttons Toolbar */}
-        <div className="p-3 bg-[#0B2822]/80 border-b border-[#19D66B]/15 flex items-center justify-center gap-2 print:hidden">
+        <div className="p-3 bg-[#140F18] border-b border-white/10 flex items-center justify-center gap-2 print:hidden">
           <button
             type="button"
             onClick={handlePrint}
-            className="flex-1 py-2 px-3 rounded-xl bg-[#10352D] hover:bg-[#19D66B]/20 border border-[#19D66B]/30 text-xs font-bold text-[#F5F7F6] hover:text-[#B8F500] transition-colors flex items-center justify-center gap-1.5"
+            className="flex-1 py-2 px-3 rounded-xl bg-[#1F1422] hover:bg-[#FF1E42]/20 border border-white/10 text-xs font-bold text-white hover:text-[#FFA000] transition-colors flex items-center justify-center gap-1.5"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print Bill</span>
@@ -134,7 +134,7 @@ Thank You For Visiting Us!
           <button
             type="button"
             onClick={handleDownloadInvoice}
-            className="py-2 px-3 rounded-xl bg-[#10352D] hover:bg-[#19D66B]/20 border border-[#19D66B]/30 text-xs font-bold text-[#A9B8B3] hover:text-white transition-colors flex items-center justify-center gap-1.5"
+            className="py-2 px-3 rounded-xl bg-[#1F1422] hover:bg-[#FF1E42]/20 border border-white/10 text-xs font-bold text-[#A09CA8] hover:text-white transition-colors flex items-center justify-center gap-1.5"
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Download</span>
@@ -148,7 +148,7 @@ Thank You For Visiting Us!
         >
           {/* Shop Header */}
           <div className="text-center border-b border-dashed border-zinc-300 pb-3 space-y-1">
-            <div className="w-10 h-10 mx-auto rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold font-display text-lg mb-1">
+            <div className="w-10 h-10 mx-auto rounded-xl bg-[#FF1E42] text-white flex items-center justify-center font-bold font-display text-lg mb-1 shadow-md">
               BK
             </div>
             <h2 className="text-lg font-black tracking-tight uppercase text-zinc-900">
@@ -218,7 +218,7 @@ Thank You For Visiting Us!
             </div>
 
             {bill.discountAmount > 0 && (
-              <div className="flex justify-between text-emerald-700">
+              <div className="flex justify-between text-[#FF1E42]">
                 <span>Discount:</span>
                 <span className="font-mono">-₹{bill.discountAmount.toFixed(2)}</span>
               </div>
@@ -233,7 +233,7 @@ Thank You For Visiting Us!
 
             <div className="flex justify-between text-base font-black text-zinc-900 pt-1 border-t border-zinc-200">
               <span>Grand Total:</span>
-              <span className="font-mono text-emerald-800">₹{bill.grandTotal.toFixed(2)}</span>
+              <span className="font-mono text-[#FF1E42]">₹{bill.grandTotal.toFixed(2)}</span>
             </div>
           </div>
 

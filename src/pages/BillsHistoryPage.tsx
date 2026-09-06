@@ -57,10 +57,10 @@ export function BillsHistoryPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold font-display text-[#F5F7F6]">
+          <h2 className="text-xl font-bold font-display text-white">
             Bills & Invoice History
           </h2>
-          <p className="text-xs text-[#A9B8B3]">
+          <p className="text-xs text-[#A09CA8]">
             Search, view, re-print and share previously generated receipts ({bills.length} total)
           </p>
         </div>
@@ -69,13 +69,13 @@ export function BillsHistoryPage() {
       {/* Filter Tabs & Search Row */}
       <div className="flex flex-col md:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#57E39B]" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF4A6B]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by bill number (BK-000012) or customer phone..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#0B2822] border border-[#19D66B]/25 text-xs text-[#F5F7F6] placeholder-[#A9B8B3]/60 focus:outline-none"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#140F18] border border-white/10 text-xs text-white placeholder-[#A09CA8]/60 focus:outline-none"
           />
         </div>
 
@@ -88,8 +88,8 @@ export function BillsHistoryPage() {
               onClick={() => setFilterPeriod(period)}
               className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
                 filterPeriod === period
-                  ? 'bg-[#19D66B] text-[#061B16]'
-                  : 'bg-[#0B2822] text-[#A9B8B3] hover:text-[#F5F7F6] border border-[#19D66B]/20'
+                  ? 'btn-primary-gradient text-white'
+                  : 'bg-[#140F18] text-[#A09CA8] hover:text-white border border-white/10'
               }`}
             >
               {period === 'ALL' ? 'All Time' : period === 'TODAY' ? 'Today' : period === 'WEEK' ? 'This Week' : 'This Month'}
@@ -101,24 +101,24 @@ export function BillsHistoryPage() {
       {/* Bills Cards List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredBills.length === 0 ? (
-          <div className="col-span-full text-center py-16 p-6 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 text-xs text-[#A9B8B3]">
+          <div className="col-span-full text-center py-16 p-6 rounded-3xl bg-[#140F18] border border-white/10 text-xs text-[#A09CA8]">
             No invoices found matching current search filter.
           </div>
         ) : (
           filteredBills.map((bill) => (
             <div
               key={bill.id}
-              className="p-5 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 hover:border-[#19D66B]/50 transition-all flex flex-col justify-between space-y-4"
+              className="p-5 rounded-3xl bg-[#140F18] border border-white/10 hover:border-[#FF1E42]/50 transition-all flex flex-col justify-between space-y-4"
             >
               <div>
-                <div className="flex items-center justify-between pb-2 border-b border-[#19D66B]/15">
-                  <span className="font-mono text-xs font-extrabold text-[#F5F7F6]">
+                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <span className="font-mono text-xs font-extrabold text-white">
                     {bill.billNumber}
                   </span>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${
                       bill.paymentStatus === 'SUCCESS'
-                        ? 'bg-[#19D66B]/20 text-[#19D66B]'
+                        ? 'bg-[#FF1E42]/20 text-[#FFA000]'
                         : 'bg-orange-500/20 text-orange-400'
                     }`}
                   >
@@ -127,23 +127,23 @@ export function BillsHistoryPage() {
                 </div>
 
                 <div className="pt-3 space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between text-[#A9B8B3]">
+                  <div className="flex items-center justify-between text-[#A09CA8]">
                     <span>Customer:</span>
-                    <span className="font-bold text-[#F5F7F6]">{bill.customerName}</span>
+                    <span className="font-bold text-white">{bill.customerName}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[#A9B8B3]">
+                  <div className="flex items-center justify-between text-[#A09CA8]">
                     <span>Mobile:</span>
                     <span className="font-mono">{bill.customerPhone}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[#A9B8B3]">
+                  <div className="flex items-center justify-between text-[#A09CA8]">
                     <span>Date & Time:</span>
                     <span>{bill.date} • {bill.time}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[#A9B8B3]">
+                  <div className="flex items-center justify-between text-[#A09CA8]">
                     <span>Payment Mode:</span>
-                    <span className="font-semibold text-[#57E39B]">{bill.paymentMethod}</span>
+                    <span className="font-semibold text-[#FFA000]">{bill.paymentMethod}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[#A9B8B3]">
+                  <div className="flex items-center justify-between text-[#A09CA8]">
                     <span>Items Count:</span>
                     <span>{bill.items.length} products</span>
                   </div>
@@ -151,10 +151,10 @@ export function BillsHistoryPage() {
               </div>
 
               {/* Amount Box & Actions */}
-              <div className="pt-3 border-t border-[#19D66B]/15 space-y-3">
+              <div className="pt-3 border-t border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-[#A9B8B3]">Grand Total</span>
-                  <span className="text-xl font-black text-[#B8F500] font-display">
+                  <span className="text-[11px] text-[#A09CA8]">Grand Total</span>
+                  <span className="text-xl font-black text-[#FFA000] font-display">
                     ₹{bill.grandTotal.toFixed(2)}
                   </span>
                 </div>
@@ -163,7 +163,7 @@ export function BillsHistoryPage() {
                   <button
                     type="button"
                     onClick={() => setSelectedBillForInvoice(bill)}
-                    className="flex-1 py-2 rounded-xl bg-[#10352D] hover:bg-[#19D66B]/20 border border-[#19D66B]/30 text-xs font-bold text-[#F5F7F6] hover:text-[#B8F500] transition-colors flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2 rounded-xl bg-[#1F1422] hover:bg-[#FF1E42]/20 border border-white/10 text-xs font-bold text-white hover:text-[#FFA000] transition-colors flex items-center justify-center gap-1.5"
                   >
                     <Receipt className="w-3.5 h-3.5" />
                     <span>View Bill</span>
@@ -172,7 +172,7 @@ export function BillsHistoryPage() {
                   <button
                     type="button"
                     onClick={() => deleteBill(bill.id)}
-                    className="p-2 rounded-xl bg-[#10352D] text-[#A9B8B3] hover:text-red-400 hover:bg-red-500/20 transition-colors"
+                    className="p-2 rounded-xl bg-[#1F1422] text-[#A09CA8] hover:text-red-400 hover:bg-red-500/20 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

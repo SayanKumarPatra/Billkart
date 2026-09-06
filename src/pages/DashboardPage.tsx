@@ -53,19 +53,19 @@ export function DashboardPage() {
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 select-none pb-24 lg:pb-8">
       {/* Welcome & Quick Store Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 rounded-3xl bg-gradient-to-r from-[#0B2822] via-[#10352D] to-[#0B2822] border border-[#19D66B]/25 shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 rounded-3xl bg-gradient-to-r from-[#160E18] via-[#24131E] to-[#160E18] border border-white/10 shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#19D66B] animate-ping" />
-            <span className="text-[11px] font-bold text-[#57E39B] uppercase tracking-wider">
+            <span className="w-2 h-2 rounded-full bg-[#FF1E42] animate-ping" />
+            <span className="text-[11px] font-bold text-[#FFA000] uppercase tracking-wider">
               Terminal Live • {business.shopName}
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold font-display text-[#F5F7F6]">
-            Welcome back, {business.ownerName || 'Merchant'}
+          <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white">
+            Welcome back, {business.ownerName || 'Sayan Kumar Patra'}
           </h2>
-          <p className="text-xs text-[#A9B8B3]">
-            {bills.length} bills generated today • Fast barcode scanning ready
+          <p className="text-xs text-[#A09CA8]">
+            {bills.length} bills generated • Fast barcode scanning and instant UPI QR ready
           </p>
         </div>
 
@@ -74,7 +74,7 @@ export function DashboardPage() {
           <button
             type="button"
             onClick={openScanner}
-            className="px-4 py-2.5 rounded-2xl bg-[#10352D] hover:bg-[#19D66B]/20 border border-[#19D66B]/30 text-xs font-bold text-[#B8F500] transition-all flex items-center gap-2"
+            className="px-4 py-2.5 rounded-2xl bg-[#1F1422] hover:bg-[#FF1E42]/20 border border-[#FF1E42]/30 text-xs font-bold text-[#FFA000] transition-all flex items-center gap-2"
           >
             <Barcode className="w-4 h-4" />
             <span>Scan Product</span>
@@ -83,7 +83,7 @@ export function DashboardPage() {
           <button
             type="button"
             onClick={() => setCurrentView('create-bill')}
-            className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#19D66B] via-[#57E39B] to-[#B8F500] text-[#061B16] font-extrabold text-xs shadow-lg hover:brightness-110 transition-all flex items-center gap-2"
+            className="px-5 py-2.5 rounded-2xl btn-primary-gradient text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Create New Bill</span>
@@ -94,63 +94,63 @@ export function DashboardPage() {
       {/* 4 Summary Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Today's Sales */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between text-[#57E39B] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#A9B8B3]">Today's Sales</span>
-            <div className="w-8 h-8 rounded-xl bg-[#10352D] flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-[#B8F500]" />
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg relative overflow-hidden">
+          <div className="flex items-center justify-between text-[#FF4A6B] mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Today's Sales</span>
+            <div className="w-8 h-8 rounded-xl bg-[#22131F] flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 text-[#FFA000]" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#F5F7F6] font-display">
-            ₹{todaySales > 0 ? todaySales.toFixed(0) : '737'}
+          <div className="text-2xl sm:text-3xl font-black text-white font-display">
+            ₹{todaySales.toFixed(2)}
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-[#57E39B] mt-1 font-semibold">
+          <div className="flex items-center gap-1 text-[11px] text-[#FFA000] mt-1 font-semibold">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>+18.4% vs yesterday</span>
+            <span>{bills.length > 0 ? '+18.4% vs yesterday' : 'Ready for first sale'}</span>
           </div>
         </div>
 
         {/* Total Bills */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 shadow-lg">
-          <div className="flex items-center justify-between text-[#57E39B] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#A9B8B3]">Total Bills</span>
-            <div className="w-8 h-8 rounded-xl bg-[#10352D] flex items-center justify-center">
-              <ReceiptText className="w-4 h-4 text-[#57E39B]" />
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
+          <div className="flex items-center justify-between text-[#FF4A6B] mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Total Bills</span>
+            <div className="w-8 h-8 rounded-xl bg-[#22131F] flex items-center justify-center">
+              <ReceiptText className="w-4 h-4 text-[#FF4A6B]" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#F5F7F6] font-display">
+          <div className="text-2xl sm:text-3xl font-black text-white font-display">
             {bills.length}
           </div>
-          <div className="text-[11px] text-[#A9B8B3] mt-1">
+          <div className="text-[11px] text-[#A09CA8] mt-1">
             {bills.filter(b => b.paymentStatus === 'SUCCESS').length} paid successfully
           </div>
         </div>
 
         {/* Total Customers */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 shadow-lg">
-          <div className="flex items-center justify-between text-[#57E39B] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#A9B8B3]">Customers</span>
-            <div className="w-8 h-8 rounded-xl bg-[#10352D] flex items-center justify-center">
-              <Users className="w-4 h-4 text-[#57E39B]" />
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
+          <div className="flex items-center justify-between text-[#FF4A6B] mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Customers</span>
+            <div className="w-8 h-8 rounded-xl bg-[#22131F] flex items-center justify-center">
+              <Users className="w-4 h-4 text-[#FF4A6B]" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#F5F7F6] font-display">
+          <div className="text-2xl sm:text-3xl font-black text-white font-display">
             {customers.length}
           </div>
-          <div className="text-[11px] text-[#57E39B] mt-1 font-semibold">
-            +4 new this week
+          <div className="text-[11px] text-[#FFA000] mt-1 font-semibold">
+            {customers.length > 0 ? `${customers.length} registered customers` : '0 registered customers'}
           </div>
         </div>
 
         {/* Total Products & Low Stock */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#0B2822] border border-[#19D66B]/20 shadow-lg">
-          <div className="flex items-center justify-between text-[#57E39B] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#A9B8B3]">Products</span>
-            <div className="w-8 h-8 rounded-xl bg-[#10352D] flex items-center justify-center">
-              <Package className="w-4 h-4 text-[#B8F500]" />
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
+          <div className="flex items-center justify-between text-[#FF4A6B] mb-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Products</span>
+            <div className="w-8 h-8 rounded-xl bg-[#22131F] flex items-center justify-center">
+              <Package className="w-4 h-4 text-[#FFA000]" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-[#F5F7F6] font-display">
+          <div className="text-2xl sm:text-3xl font-black text-white font-display">
             {products.length}
           </div>
           <div className="flex items-center gap-1.5 text-[11px] mt-1">
@@ -160,7 +160,7 @@ export function DashboardPage() {
                 {lowStockCount} items low stock
               </span>
             ) : (
-              <span className="text-[#57E39B]">Stock levels optimal</span>
+              <span className="text-[#FFA000]">Inventory ready for POS</span>
             )}
           </div>
         </div>
@@ -169,16 +169,16 @@ export function DashboardPage() {
       {/* Main Grid: Revenue Velocity Chart & Recent Bills */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         {/* Left Column: Sales Chart (7 cols) */}
-        <div className="lg:col-span-7 p-5 rounded-3xl bg-[#0B2822] border border-[#19D66B]/25 shadow-xl flex flex-col justify-between">
+        <div className="lg:col-span-7 p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-xl flex flex-col justify-between">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-bold font-display text-[#F5F7F6]">
-                Weekly Revenue Velocity
+              <h3 className="text-sm font-bold font-display text-white">
+                Revenue Velocity
               </h3>
-              <p className="text-xs text-[#A9B8B3]">Total sales recorded across POS terminals</p>
+              <p className="text-xs text-[#A09CA8]">Sales performance overview</p>
             </div>
 
-            <div className="flex rounded-xl bg-[#061B16] p-1 border border-[#19D66B]/20 text-[11px]">
+            <div className="flex rounded-xl bg-[#1A121E] p-1 border border-white/10 text-[11px]">
               {(['day', 'week', 'month'] as const).map((mode) => (
                 <button
                   key={mode}
@@ -186,8 +186,8 @@ export function DashboardPage() {
                   onClick={() => setChartRange(mode)}
                   className={`px-2.5 py-1 rounded-lg font-bold capitalize transition-all ${
                     chartRange === mode
-                      ? 'bg-[#10352D] text-[#B8F500]'
-                      : 'text-[#A9B8B3]'
+                      ? 'bg-[#27131F] text-[#FFA000] border border-[#FF1E42]/30'
+                      : 'text-[#A09CA8]'
                   }`}
                 >
                   {mode}
@@ -204,22 +204,22 @@ export function DashboardPage() {
 
               return (
                 <div key={i} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                  <span className="text-[10px] font-mono text-[#A9B8B3] opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-[10px] font-mono text-[#A09CA8] opacity-0 group-hover:opacity-100 transition-opacity">
                     ₹{bar.value}
                   </span>
-                  <div className="w-full max-w-[36px] bg-[#061B16] rounded-xl overflow-hidden flex flex-col justify-end p-1 h-44">
+                  <div className="w-full max-w-[36px] bg-[#100C14] rounded-xl overflow-hidden flex flex-col justify-end p-1 h-44">
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: `${heightPercent}%` }}
                       transition={{ duration: 0.8, delay: i * 0.08 }}
                       className={`w-full rounded-lg transition-all ${
                         isHighest
-                          ? 'bg-gradient-to-t from-[#19D66B] to-[#B8F500] shadow-[0_0_15px_rgba(184,245,0,0.5)]'
-                          : 'bg-gradient-to-t from-[#10352D] to-[#19D66B]/60 group-hover:to-[#19D66B]'
+                          ? 'btn-primary-gradient shadow-[0_0_15px_rgba(255,30,66,0.5)]'
+                          : 'bg-gradient-to-t from-[#27131F] to-[#FF1E42]/60 group-hover:to-[#FF1E42]'
                       }`}
                     />
                   </div>
-                  <span className={`text-[11px] font-bold ${isHighest ? 'text-[#B8F500]' : 'text-[#A9B8B3]'}`}>
+                  <span className={`text-[11px] font-bold ${isHighest ? 'text-[#FFA000]' : 'text-[#A09CA8]'}`}>
                     {bar.label}
                   </span>
                 </div>
@@ -227,75 +227,83 @@ export function DashboardPage() {
             })}
           </div>
 
-          <div className="pt-3 border-t border-[#19D66B]/15 flex items-center justify-between text-xs text-[#A9B8B3]">
-            <span>Average Order Value: <strong className="text-[#F5F7F6]">₹345.00</strong></span>
-            <span className="text-[#57E39B] font-semibold">UPI Acceptance Rate: 82%</span>
+          <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-[#A09CA8]">
+            <span>Average Order Value: <strong className="text-white">₹{bills.length > 0 ? (totalRevenue / bills.length).toFixed(2) : '0.00'}</strong></span>
+            <span className="text-[#FFA000] font-semibold">UPI Acceptance: Active</span>
           </div>
         </div>
 
         {/* Right Column: Recent Bills List (5 cols) */}
-        <div className="lg:col-span-5 p-5 rounded-3xl bg-[#0B2822] border border-[#19D66B]/25 shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-[#19D66B]/15">
-            <h3 className="text-sm font-bold font-display text-[#F5F7F6]">
+        <div className="lg:col-span-5 p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <h3 className="text-sm font-bold font-display text-white">
               Recent Bills ({bills.length})
             </h3>
             <button
               type="button"
               onClick={() => setCurrentView('bills')}
-              className="text-[11px] font-bold text-[#57E39B] hover:text-[#B8F500] flex items-center gap-1"
+              className="text-[11px] font-bold text-[#FFA000] hover:underline flex items-center gap-1"
             >
               <span>View All</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="divide-y divide-[#19D66B]/15 max-h-80 overflow-y-auto pr-1">
-            {bills.slice(0, 5).map((bill) => (
-              <div
-                key={bill.id}
-                onClick={() => setSelectedInvoice(bill)}
-                className="py-3 flex items-center justify-between hover:bg-[#10352D]/40 px-2 rounded-xl cursor-pointer transition-colors"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-extrabold text-[#F5F7F6]">
-                      {bill.billNumber}
-                    </span>
-                    <span
-                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
-                        bill.paymentStatus === 'SUCCESS'
-                          ? 'bg-[#19D66B]/20 text-[#19D66B]'
-                          : 'bg-orange-500/20 text-orange-400'
-                      }`}
-                    >
-                      {bill.paymentMethod}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#A9B8B3] mt-0.5">
-                    {bill.customerName} • {bill.time}
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-xs font-black text-[#B8F500] font-mono">
-                    ₹{bill.grandTotal.toFixed(2)}
-                  </div>
-                  <span className="text-[10px] text-[#57E39B] flex items-center justify-end gap-1">
-                    <CheckCircle2 className="w-3 h-3" />
-                    <span>Paid</span>
-                  </span>
-                </div>
+          <div className="divide-y divide-white/10 max-h-80 overflow-y-auto pr-1">
+            {bills.length === 0 ? (
+              <div className="py-12 text-center space-y-2">
+                <ReceiptText className="w-8 h-8 text-[#A09CA8]/50 mx-auto" />
+                <p className="text-xs font-semibold text-white">No bills generated yet</p>
+                <p className="text-[11px] text-[#A09CA8]">Create your first bill to record transactions</p>
               </div>
-            ))}
+            ) : (
+              bills.slice(0, 5).map((bill) => (
+                <div
+                  key={bill.id}
+                  onClick={() => setSelectedInvoice(bill)}
+                  className="py-3 flex items-center justify-between hover:bg-[#1E1422]/60 px-2 rounded-xl cursor-pointer transition-colors"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-extrabold text-white">
+                        {bill.billNumber}
+                      </span>
+                      <span
+                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
+                          bill.paymentStatus === 'SUCCESS'
+                            ? 'bg-[#FF1E42]/20 text-[#FF4A6B]'
+                            : 'bg-orange-500/20 text-orange-400'
+                        }`}
+                      >
+                        {bill.paymentMethod}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-[#A09CA8] mt-0.5">
+                      {bill.customerName} • {bill.time}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-xs font-black text-[#FFA000] font-mono">
+                      ₹{bill.grandTotal.toFixed(2)}
+                    </div>
+                    <span className="text-[10px] text-[#FF4A6B] flex items-center justify-end gap-1">
+                      <CheckCircle2 className="w-3 h-3" />
+                      <span>Paid</span>
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
-          <div className="pt-3 border-t border-[#19D66B]/15">
+          <div className="pt-3 border-t border-white/10">
             <button
               type="button"
               onClick={() => setCurrentView('create-bill')}
-              className="w-full py-2.5 rounded-xl bg-[#10352D] hover:bg-[#19D66B]/20 text-xs font-bold text-[#F5F7F6] hover:text-[#B8F500] border border-[#19D66B]/30 transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-xl bg-[#1F1422] hover:bg-[#FF1E42]/20 text-xs font-bold text-white hover:text-[#FFA000] border border-[#FF1E42]/30 transition-colors flex items-center justify-center gap-2"
             >
-              <PlusCircle className="w-4 h-4 text-[#57E39B]" />
+              <PlusCircle className="w-4 h-4 text-[#FFA000]" />
               <span>Create Bill For Customer</span>
             </button>
           </div>

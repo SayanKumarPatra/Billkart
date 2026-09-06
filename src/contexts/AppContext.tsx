@@ -86,18 +86,18 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 const STORAGE_KEYS = {
-  BUSINESS: 'billkart_business',
-  PRODUCTS: 'billkart_products',
-  CUSTOMERS: 'billkart_customers',
-  BILLS: 'billkart_bills',
-  USER: 'billkart_user',
+  BUSINESS: 'billkart_v2_business',
+  PRODUCTS: 'billkart_v2_products',
+  CUSTOMERS: 'billkart_v2_customers',
+  BILLS: 'billkart_v2_bills',
+  USER: 'billkart_v2_user',
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
   // Navigation State
   const [currentView, setCurrentView] = useState<AppView>('splash');
 
-  // User State
+  // User State - Initialized fresh to Sayan Kumar Patra
   const [user, setUser] = useState<UserAccount>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.USER);
     if (saved) {
@@ -105,8 +105,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
     return {
       id: 'usr-1',
-      name: 'Rahul Sharma',
-      email: 'store@billkart.in',
+      name: 'Sayan Kumar Patra',
+      email: 'sayan@gmail.com',
       isAuthenticated: true,
       hasCompletedSetup: true,
       hasCompletedOnboarding: true,
@@ -131,7 +131,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return INITIAL_PRODUCTS;
   });
 
-  // Customers State
+  // Customers State (starts clean: [])
   const [customers, setCustomers] = useState<Customer[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);
     if (saved) {
@@ -140,7 +140,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return INITIAL_CUSTOMERS;
   });
 
-  // Bills State
+  // Bills State (starts clean: [])
   const [bills, setBills] = useState<Bill[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.BILLS);
     if (saved) {

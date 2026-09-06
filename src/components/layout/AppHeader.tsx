@@ -7,10 +7,13 @@ import {
   Store, 
   CheckCircle2, 
   AlertTriangle,
-  X
+  X,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { BillKartLogo } from '../BillKartLogo';
+import { isSoundEnabled, toggleSoundEnabled, playBarcodeScanSuccess } from '../../utils/soundEffects';
 
 export function AppHeader() {
   const { 
@@ -25,7 +28,16 @@ export function AppHeader() {
   } = useApp();
 
   const [showNotifications, setShowNotifications] = useState(false);
+  const [soundOn, setSoundOn] = useState(() => isSoundEnabled());
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  const handleToggleSound = () => {
+    const newState = toggleSoundEnabled();
+    setSoundOn(newState);
+    if (newState) {
+      playBarcodeScanSuccess();
+    }
+  };
 
   const viewTitles: Record<string, string> = {
     dashboard: 'Dashboard Overview',
@@ -39,19 +51,19 @@ export function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-20 bg-[#0B2822]/90 backdrop-blur-md border-b border-[#19D66B]/15 px-4 sm:px-6 py-3 select-none">
+    <header className="sticky top-0 z-20 bg-[#120E16]/95 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-3 select-none">
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3">
         {/* Left: Mobile Brand Logo / Desktop Page Title */}
         <div className="flex items-center gap-3">
           <div className="lg:hidden">
-            <BillKartLogo size="sm" showTagline={false} showScript={false} animate={false} />
+            <BillKartLogo size="sm" showTagline={false} showScript={false} animate={false} horizontal={true} />
           </div>
 
           <div className="hidden lg:block">
-            <h1 className="text-lg font-bold font-display text-[#F5F7F6]">
+            <h1 className="text-lg font-bold font-display text-white">
               {viewTitles[currentView] || 'BillKart POS'}
             </h1>
-            <p className="text-xs text-[#A9B8B3]">
+            <p className="text-xs text-[#A09CA8]">
               {business.shopName} • {business.address.split(',')[0]}
             </p>
           </div>
@@ -64,9 +76,9 @@ export function AppHeader() {
             type="button"
             onClick={openScanner}
             title="Scan Barcode via Camera"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#10352D] hover:bg-[#19D66B]/20 border border-[#19D66B]/30 text-xs font-semibold text-[#57E39B] hover:text-[#B8F500] transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#24131E] hover:bg-[#FF1E42]/20 border border-[#FF1E42]/30 text-xs font-semibold text-[#FF4A6B] hover:text-[#FFA000] transition-colors shadow-sm"
           >
-            <Barcode className="w-4 h-4 text-[#B8F500]" />
+            <Barcode className="w-4 h-4 text-[#FFA000]" />
             <span className="hidden sm:inline">Scan Barcode</span>
           </button>
 
@@ -74,19 +86,33 @@ export function AppHeader() {
           <button
             type="button"
             onClick={() => setCurrentView('create-bill')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
               currentView === 'create-bill'
-                ? 'bg-[#19D66B] text-[#061B16] shadow-[0_0_15px_rgba(25,214,107,0.4)]'
-                : 'bg-gradient-to-r from-[#10352D] to-[#10352D]/80 hover:bg-[#19D66B]/20 border border-[#19D66B]/30 text-[#F5F7F6]'
+                ? 'btn-primary-gradient text-white shadow-[0_0_15px_rgba(255,30,66,0.4)]'
+                : 'bg-[#24131E] hover:bg-[#FF1E42]/20 border border-[#FF1E42]/30 text-white'
             }`}
           >
             <ShoppingCart className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Current Bill</span>
             {cartItems.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-[#B8F500] text-[#061B16]">
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-extrabold bg-[#FFA000] text-black">
                 {cartItems.length}
               </span>
             )}
+          </button>
+
+          {/* Sound Effects Toggle Button */}
+          <button
+            type="button"
+            onClick={handleToggleSound}
+            title={soundOn ? 'Sound Effects Enabled (Click to Mute)' : 'Sound Effects Muted (Click to Enable)'}
+            className={`p-2 rounded-xl border transition-colors ${
+              soundOn 
+                ? 'bg-[#1D1420] text-[#FFA000] border-white/10 hover:border-[#FF1E42]/40' 
+                : 'bg-[#1D1420]/50 text-[#A09CA8]/50 border-white/5 line-through'
+            }`}
+          >
+            {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
 
           {/* Notifications Flyout Trigger */}
@@ -94,11 +120,11 @@ export function AppHeader() {
             <button
               type="button"
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 rounded-xl bg-[#10352D] hover:bg-[#19D66B]/20 border border-[#19D66B]/30 text-[#A9B8B3] hover:text-[#F5F7F6] transition-colors"
+              className="relative p-2 rounded-xl bg-[#1D1420] hover:bg-[#FF1E42]/20 border border-white/10 text-[#A09CA8] hover:text-white transition-colors"
             >
               <Bell className="w-4 h-4" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center animate-pulse">
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#FF1E42] text-[10px] font-bold text-white flex items-center justify-center animate-pulse">
                   {unreadCount}
                 </span>
               )}
@@ -107,15 +133,15 @@ export function AppHeader() {
             {/* Notifications Dropdown */}
             {showNotifications && (
               <div 
-                className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-[#0B2822] border border-[#19D66B]/30 shadow-2xl p-4 z-50 text-xs space-y-3"
+                className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl bg-[#16111B] border border-white/10 shadow-2xl p-4 z-50 text-xs space-y-3 backdrop-blur-xl"
               >
-                <div className="flex items-center justify-between pb-2 border-b border-[#19D66B]/15">
-                  <span className="font-bold text-sm text-[#F5F7F6]">Store Notifications</span>
+                <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                  <span className="font-bold text-sm text-white">Store Notifications</span>
                   {notifications.length > 0 && (
                     <button
                       type="button"
                       onClick={clearNotifications}
-                      className="text-[11px] text-[#A9B8B3] hover:text-red-400"
+                      className="text-[11px] text-[#A09CA8] hover:text-red-400"
                     >
                       Clear All
                     </button>
@@ -124,7 +150,7 @@ export function AppHeader() {
 
                 <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
                   {notifications.length === 0 ? (
-                    <p className="text-center py-6 text-[#A9B8B3]">No notifications right now</p>
+                    <p className="text-center py-6 text-[#A09CA8]">No notifications right now</p>
                   ) : (
                     notifications.map((n) => (
                       <div
@@ -132,19 +158,19 @@ export function AppHeader() {
                         onClick={() => markNotificationRead(n.id)}
                         className={`p-2.5 rounded-xl border transition-colors cursor-pointer flex items-start gap-2.5 ${
                           n.read
-                            ? 'bg-[#061B16]/50 border-transparent text-[#A9B8B3]'
-                            : 'bg-[#10352D] border-[#19D66B]/25 text-[#F5F7F6]'
+                            ? 'bg-[#100C14]/50 border-transparent text-[#A09CA8]'
+                            : 'bg-[#221522] border-[#FF1E42]/25 text-white'
                         }`}
                       >
                         {n.type === 'stock' ? (
                           <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
                         ) : (
-                          <CheckCircle2 className="w-4 h-4 text-[#19D66B] shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-4 h-4 text-[#FF4A6B] shrink-0 mt-0.5" />
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-[11px] truncate">{n.title}</p>
-                          <p className="text-[10px] text-[#A9B8B3] mt-0.5">{n.message}</p>
-                          <span className="text-[9px] text-[#57E39B] mt-1 block">{n.timestamp}</span>
+                          <p className="text-[10px] text-[#A09CA8] mt-0.5">{n.message}</p>
+                          <span className="text-[9px] text-[#FFA000] mt-1 block">{n.timestamp}</span>
                         </div>
                       </div>
                     ))
@@ -158,3 +184,4 @@ export function AppHeader() {
     </header>
   );
 }
+

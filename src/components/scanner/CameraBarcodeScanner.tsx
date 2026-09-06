@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { Product } from '../../types';
+import { playBarcodeScanSuccess, playBarcodeScanError } from '../../utils/soundEffects';
 
 interface CameraBarcodeScannerProps {
   isOpen: boolean;
@@ -52,26 +53,6 @@ export function CameraBarcodeScanner({
   const [newProdName, setNewProdName] = useState('');
   const [newProdPrice, setNewProdPrice] = useState('');
   const [newProdCategory, setNewProdCategory] = useState('General');
-
-  // Play audio beep on successful barcode read
-  const playBeep = () => {
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(1850, audioCtx.currentTime); // Crisp POS high beep
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.12);
-      if (navigator.vibrate) navigator.vibrate(60);
-    } catch (e) {
-      // AudioContext might be blocked until user gesture
-    }
-  };
 
   // Start Camera when scanner opens
   useEffect(() => {
@@ -191,11 +172,10 @@ export function CameraBarcodeScanner({
     const code = rawCode.trim();
     if (!code) return;
 
-    playBeep();
-
     const result = addToCartByBarcode(code);
 
     if (result.success && result.product) {
+      playBarcodeScanSuccess();
       setLastScannedResult({
         barcode: code,
         product: result.product,
@@ -204,7 +184,8 @@ export function CameraBarcodeScanner({
       });
       if (onProductFound) onProductFound(result.product, result.quantity || 1);
     } else {
-      // Unknown barcode
+      // Unknown barcode error chime
+      playBarcodeScanError();
       setLastScannedResult({
         barcode: code,
         status: 'unknown',
@@ -238,7 +219,7 @@ export function CameraBarcodeScanner({
 
     // Add to cart immediately
     addToCartByBarcode(added.barcode);
-    playBeep();
+    playBarcodeScanSuccess();
 
     setUnknownBarcodeModal(null);
     setNewProdName('');
@@ -262,17 +243,17 @@ export function CameraBarcodeScanner({
         initial={{ opacity: 0, scale: 0.94, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 15 }}
-        className="relative w-full max-w-lg bg-[#061B16] rounded-3xl border border-[#19D66B]/30 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(25,214,107,0.15)] flex flex-col overflow-hidden max-h-[92vh]"
+        className="relative w-full max-w-lg bg-[#100C14] rounded-3xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.8),0_0_30px_rgba(255,30,66,0.15)] flex flex-col overflow-hidden max-h-[92vh]"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#19D66B]/20 bg-[#0B2822]/90 flex items-center justify-between z-20">
+        <div className="px-5 py-4 border-b border-white/10 bg-[#140F18] flex items-center justify-between z-20">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#10352D] border border-[#19D66B]/30 flex items-center justify-center text-[#B8F500]">
+            <div className="w-8 h-8 rounded-xl bg-[#1F1422] border border-white/10 flex items-center justify-center text-[#FFA000]">
               <Barcode className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-[#F5F7F6] font-display">Smart Barcode Scanner</h3>
-              <p className="text-[11px] text-[#A9B8B3]">Point camera at product barcode</p>
+              <h3 className="font-bold text-sm text-white font-display">Smart Barcode Scanner</h3>
+              <p className="text-[11px] text-[#A09CA8]">Point camera at product barcode</p>
             </div>
           </div>
 
@@ -283,7 +264,7 @@ export function CameraBarcodeScanner({
                 onClick={toggleTorch}
                 title={torchOn ? 'Turn Flash Off' : 'Turn Flash On'}
                 className={`p-2 rounded-xl transition-colors ${
-                  torchOn ? 'bg-[#B8F500] text-[#061B16]' : 'bg-[#10352D] text-[#F5F7F6] hover:bg-[#19D66B]/20'
+                  torchOn ? 'bg-[#FFA000] text-black font-bold' : 'bg-[#1F1422] text-white hover:bg-[#FF1E42]/20'
                 }`}
               >
                 {torchOn ? <Zap className="w-4 h-4" /> : <ZapOff className="w-4 h-4" />}
@@ -293,7 +274,7 @@ export function CameraBarcodeScanner({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl bg-[#10352D] text-[#A9B8B3] hover:text-[#F5F7F6] hover:bg-red-500/20 transition-colors"
+              className="p-2 rounded-xl bg-[#1F1422] text-[#A09CA8] hover:text-white hover:bg-red-500/20 transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -313,10 +294,10 @@ export function CameraBarcodeScanner({
 
           {/* Fallback or Camera Inactive Info */}
           {!hasCameraPermission && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-[#061B16]/95 z-10">
-              <Camera className="w-12 h-12 text-[#19D66B] mb-2 animate-pulse" />
-              <p className="text-sm font-semibold text-[#F5F7F6]">Camera Ready & Interactive</p>
-              <p className="text-xs text-[#A9B8B3] max-w-xs mt-1">
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-[#100C14]/95 z-10">
+              <Camera className="w-12 h-12 text-[#FF1E42] mb-2 animate-pulse" />
+              <p className="text-sm font-semibold text-white">Camera Ready & Interactive</p>
+              <p className="text-xs text-[#A09CA8] max-w-xs mt-1">
                 {cameraError || 'Use real camera or test with quick-scan buttons below'}
               </p>
             </div>
@@ -324,12 +305,12 @@ export function CameraBarcodeScanner({
 
           {/* Target Scanning Reticle with Corner Brackets & Laser */}
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center p-8 z-20">
-            <div className="relative w-64 h-36 border-2 border-dashed border-[#19D66B]/40 rounded-2xl flex items-center justify-center">
+            <div className="relative w-64 h-36 border-2 border-dashed border-[#FF1E42]/40 rounded-2xl flex items-center justify-center">
               {/* Glowing Corner Accents */}
-              <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[#B8F500] rounded-tl-xl" />
-              <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[#B8F500] rounded-tr-xl" />
-              <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[#B8F500] rounded-bl-xl" />
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[#B8F500] rounded-br-xl" />
+              <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-[#FF1E42] rounded-tl-xl" />
+              <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-[#FF1E42] rounded-tr-xl" />
+              <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-[#FF1E42] rounded-bl-xl" />
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-[#FF1E42] rounded-br-xl" />
 
               {/* Animated Laser Beam */}
               <motion.div
@@ -341,10 +322,10 @@ export function CameraBarcodeScanner({
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                className="w-full h-0.5 bg-gradient-to-r from-transparent via-[#B8F500] to-transparent shadow-[0_0_12px_#B8F500]"
+                className="w-full h-0.5 bg-gradient-to-r from-transparent via-[#FF1E42] to-transparent shadow-[0_0_14px_#FF1E42]"
               />
 
-              <span className="absolute bottom-2 text-[10px] font-mono font-bold tracking-widest text-[#B8F500] uppercase bg-[#061B16]/80 px-2 py-0.5 rounded-md">
+              <span className="absolute bottom-2 text-[10px] font-mono font-bold tracking-widest text-[#FFA000] uppercase bg-[#100C14]/80 px-2 py-0.5 rounded-md">
                 Align Barcode Here
               </span>
             </div>
@@ -357,18 +338,18 @@ export function CameraBarcodeScanner({
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="absolute inset-x-4 top-4 z-30 p-3 rounded-2xl bg-[#19D66B]/90 text-[#061B16] font-bold text-xs flex items-center justify-between shadow-lg"
+                className="absolute inset-x-4 top-4 z-30 p-3 rounded-2xl btn-primary-gradient text-white font-bold text-xs flex items-center justify-between shadow-lg"
               >
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-[#061B16]" />
+                  <CheckCircle2 className="w-5 h-5 text-white" />
                   <div>
                     <p className="font-extrabold">{lastScannedResult.product?.name}</p>
-                    <p className="text-[10px] opacity-85">
+                    <p className="text-[10px] opacity-90">
                       Auto-added! Quantity: x{lastScannedResult.quantity} • ₹{lastScannedResult.product?.price}
                     </p>
                   </div>
                 </div>
-                <span className="text-[11px] font-black px-2 py-1 bg-[#061B16] text-[#B8F500] rounded-lg">
+                <span className="text-[11px] font-black px-2 py-1 bg-black/40 text-[#FFA000] rounded-lg">
                   +1 Added
                 </span>
               </motion.div>
@@ -377,22 +358,22 @@ export function CameraBarcodeScanner({
         </div>
 
         {/* Bottom Actions & Simulation Tools */}
-        <div className="p-4 bg-[#0B2822] space-y-3.5 z-20">
+        <div className="p-4 bg-[#140F18] space-y-3.5 z-20">
           {/* Manual Barcode Entry Form */}
           <form onSubmit={handleManualSubmit} className="flex gap-2">
             <div className="relative flex-1">
-              <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#57E39B]" />
+              <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF4A6B]" />
               <input
                 type="text"
                 value={manualCode}
                 onChange={(e) => setManualCode(e.target.value)}
                 placeholder="Or enter barcode manually (e.g. 8901030834027)"
-                className="w-full pl-10 pr-3 py-2 rounded-xl bg-[#061B16] border border-[#19D66B]/30 text-xs text-[#F5F7F6] placeholder-[#A9B8B3]/60 focus:outline-none focus:border-[#B8F500]"
+                className="w-full pl-10 pr-3 py-2 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white placeholder-[#A09CA8]/60 focus:outline-none focus:border-[#FF1E42]"
               />
             </div>
             <button
               type="submit"
-              className="px-3.5 py-2 rounded-xl bg-[#19D66B] hover:bg-[#B8F500] text-[#061B16] font-bold text-xs transition-colors flex items-center gap-1"
+              className="px-3.5 py-2 rounded-xl btn-primary-gradient text-white font-bold text-xs shadow-md transition-all flex items-center gap-1"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Add</span>
@@ -402,10 +383,10 @@ export function CameraBarcodeScanner({
           {/* Quick-Scan Simulation Chips (Super helpful for instant testing!) */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A9B8B3]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#A09CA8]">
                 Quick Test Real Barcodes:
               </span>
-              <label className="text-[10px] font-semibold text-[#57E39B] hover:text-[#B8F500] flex items-center gap-1 cursor-pointer">
+              <label className="text-[10px] font-semibold text-[#FFA000] hover:underline flex items-center gap-1 cursor-pointer">
                 <ImageIcon className="w-3 h-3" />
                 <span>Upload Barcode Image</span>
                 <input
@@ -423,10 +404,10 @@ export function CameraBarcodeScanner({
                   key={p.id}
                   type="button"
                   onClick={() => handleBarcodeDetected(p.barcode)}
-                  className="px-2.5 py-1 rounded-lg bg-[#10352D] hover:bg-[#19D66B]/25 border border-[#19D66B]/20 text-[11px] text-[#F5F7F6] hover:text-[#B8F500] transition-colors flex items-center gap-1"
+                  className="px-2.5 py-1 rounded-lg bg-[#1F1422] hover:bg-[#FF1E42]/20 border border-white/10 text-[11px] text-[#A09CA8] hover:text-white transition-colors flex items-center gap-1"
                 >
                   <span>{p.name.split(' ')[0]}</span>
-                  <span className="text-[9px] font-mono text-[#57E39B]">{p.barcode.slice(-4)}</span>
+                  <span className="text-[9px] font-mono text-[#FFA000]">{p.barcode.slice(-4)}</span>
                 </button>
               ))}
 
@@ -449,24 +430,24 @@ export function CameraBarcodeScanner({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
-              className="absolute inset-x-0 bottom-0 z-40 p-5 bg-[#061B16] border-t-2 border-orange-500/60 rounded-t-3xl shadow-2xl space-y-3"
+              className="absolute inset-x-0 bottom-0 z-40 p-5 bg-[#100C14] border-t-2 border-orange-500/60 rounded-t-3xl shadow-2xl space-y-3"
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2 text-orange-400">
                   <AlertCircle className="w-5 h-5" />
-                  <h4 className="font-bold text-sm text-[#F5F7F6]">Product Not Found</h4>
+                  <h4 className="font-bold text-sm text-white">Product Not Found</h4>
                 </div>
                 <button
                   type="button"
                   onClick={() => setUnknownBarcodeModal(null)}
-                  className="text-[#A9B8B3] hover:text-white"
+                  className="text-[#A09CA8] hover:text-white"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <p className="text-xs text-[#A9B8B3]">
-                Barcode <span className="font-mono text-[#F5F7F6] font-bold">{unknownBarcodeModal}</span> is not in your product catalog. Add it now to auto-bill it!
+              <p className="text-xs text-[#A09CA8]">
+                Barcode <span className="font-mono text-white font-bold">{unknownBarcodeModal}</span> is not in your product catalog. Add it now to auto-bill it!
               </p>
 
               <form onSubmit={handleCreateUnknownProduct} className="space-y-2.5">
@@ -476,7 +457,7 @@ export function CameraBarcodeScanner({
                   value={newProdName}
                   onChange={(e) => setNewProdName(e.target.value)}
                   placeholder="Product Name (e.g. Britannia Bourbon 150g)"
-                  className="w-full px-3 py-2 rounded-xl bg-[#0B2822] border border-[#19D66B]/30 text-xs text-[#F5F7F6] placeholder-[#A9B8B3]/60 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-[#140F18] border border-white/15 text-xs text-white placeholder-[#A09CA8]/60 focus:outline-none"
                 />
 
                 <div className="grid grid-cols-2 gap-2">
@@ -487,12 +468,12 @@ export function CameraBarcodeScanner({
                     value={newProdPrice}
                     onChange={(e) => setNewProdPrice(e.target.value)}
                     placeholder="Price (₹)"
-                    className="w-full px-3 py-2 rounded-xl bg-[#0B2822] border border-[#19D66B]/30 text-xs text-[#F5F7F6] placeholder-[#A9B8B3]/60 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-[#140F18] border border-white/15 text-xs text-white placeholder-[#A09CA8]/60 focus:outline-none"
                   />
                   <select
                     value={newProdCategory}
                     onChange={(e) => setNewProdCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-[#0B2822] border border-[#19D66B]/30 text-xs text-[#F5F7F6] focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl bg-[#140F18] border border-white/15 text-xs text-white focus:outline-none"
                   >
                     <option value="General">General</option>
                     <option value="Snacks & Biscuits">Snacks & Biscuits</option>
@@ -505,14 +486,14 @@ export function CameraBarcodeScanner({
                 <div className="flex gap-2 pt-1">
                   <button
                     type="submit"
-                    className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-[#19D66B] to-[#B8F500] text-[#061B16] font-bold text-xs shadow-md"
+                    className="flex-1 py-2.5 rounded-xl btn-primary-gradient text-white font-bold text-xs shadow-md"
                   >
                     Save & Add to Bill
                   </button>
                   <button
                     type="button"
                     onClick={() => setUnknownBarcodeModal(null)}
-                    className="px-4 py-2.5 rounded-xl bg-[#10352D] text-[#A9B8B3] text-xs font-semibold"
+                    className="px-4 py-2.5 rounded-xl bg-[#1F1422] text-[#A09CA8] text-xs font-semibold"
                   >
                     Cancel
                   </button>

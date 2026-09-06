@@ -57,7 +57,7 @@ export function VideoPlayer({
       alpha: number;
     }> = [];
 
-    const colors = ['#19D66B', '#57E39B', '#B8F500', '#10352D'];
+    const colors = ['#FF1E42', '#FF6A00', '#FFA000', '#FF4A6B'];
     const particleCount = 45;
 
     for (let i = 0; i < particleCount; i++) {
@@ -82,14 +82,14 @@ export function VideoPlayer({
 
       // Deep dark surface background
       const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-      bgGrad.addColorStop(0, '#061B16');
-      bgGrad.addColorStop(0.5, '#0B2822');
-      bgGrad.addColorStop(1, '#061B16');
+      bgGrad.addColorStop(0, '#070709');
+      bgGrad.addColorStop(0.5, '#140F18');
+      bgGrad.addColorStop(1, '#070709');
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, width, height);
 
       // Subtle dynamic grid
-      ctx.strokeStyle = 'rgba(25, 214, 107, 0.05)';
+      ctx.strokeStyle = 'rgba(255, 30, 66, 0.05)';
       ctx.lineWidth = 1;
       const gridSize = 40;
       for (let x = 0; x < width; x += gridSize) {
@@ -172,9 +172,9 @@ export function VideoPlayer({
       if (scanY < height * 0.2) scanDirection = 1;
 
       const laserGrad = ctx.createLinearGradient(0, scanY - 12, 0, scanY + 12);
-      laserGrad.addColorStop(0, 'rgba(184, 245, 0, 0)');
-      laserGrad.addColorStop(0.5, 'rgba(184, 245, 0, 0.85)');
-      laserGrad.addColorStop(1, 'rgba(25, 214, 107, 0)');
+      laserGrad.addColorStop(0, 'rgba(255, 30, 66, 0)');
+      laserGrad.addColorStop(0.5, 'rgba(255, 106, 0, 0.85)');
+      laserGrad.addColorStop(1, 'rgba(255, 30, 66, 0)');
 
       ctx.fillStyle = laserGrad;
       ctx.fillRect(width * 0.1, scanY - 6, width * 0.8, 12);
@@ -185,7 +185,7 @@ export function VideoPlayer({
       ctx.lineTo(width * 0.92, scanY);
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 1.5;
-      ctx.shadowColor = '#B8F500';
+      ctx.shadowColor = '#FF1E42';
       ctx.shadowBlur = 12;
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -244,7 +244,7 @@ export function VideoPlayer({
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
       className={`relative overflow-hidden w-full h-full flex items-center justify-center ${className} ${
-        isDragOver ? 'ring-2 ring-[#B8F500] ring-offset-2 ring-offset-[#061B16]' : ''
+        isDragOver ? 'ring-2 ring-[#FF1E42] ring-offset-2 ring-offset-[#070709]' : ''
       }`}
     >
       {/* Hidden File Input for Custom Video Upload */}
@@ -282,34 +282,34 @@ export function VideoPlayer({
       {/* Atmospheric Dark Gradient Overlays for optimal text contrast and readability */}
       <div className="absolute inset-0 pointer-events-none z-10">
         {/* Top Header Fade */}
-        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-[#061B16] via-[#061B16]/75 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-[#070709] via-[#070709]/75 to-transparent" />
         
         {/* Bottom Loading Area Dark Vignette */}
-        <div className="absolute bottom-0 left-0 right-0 h-56 bg-gradient-to-t from-[#061B16] via-[#061B16]/85 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-56 bg-gradient-to-t from-[#070709] via-[#070709]/85 to-transparent" />
 
         {/* Soft Radial Ambient Vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(6,27,22,0.65)_95%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(7,7,9,0.75)_95%)]" />
       </div>
 
       {/* Drag & Drop Feedback Overlay */}
       {isDragOver && (
-        <div className="absolute inset-0 z-30 bg-[#061B16]/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-[#B8F500]">
-          <Upload className="w-12 h-12 text-[#B8F500] animate-bounce mb-3" />
-          <p className="text-base font-bold text-[#F5F7F6]">Drop your custom video here</p>
-          <p className="text-xs text-[#A9B8B3] mt-1">Supports MP4, WebM, MOV</p>
+        <div className="absolute inset-0 z-30 bg-[#070709]/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center border-2 border-dashed border-[#FF1E42]">
+          <Upload className="w-12 h-12 text-[#FF1E42] animate-bounce mb-3" />
+          <p className="text-base font-bold text-white">Drop your custom video here</p>
+          <p className="text-xs text-[#A09CA8] mt-1">Supports MP4, WebM, MOV</p>
         </div>
       )}
 
       {/* Floating Control Bar (Subtle & Non-intrusive) */}
       {showControlsOverlay && !isHeroBackground && (
-        <div className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 p-1.5 rounded-xl bg-[#061B16]/85 border border-[#19D66B]/25 backdrop-blur-md opacity-70 hover:opacity-100 transition-opacity">
+        <div className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 p-1.5 rounded-xl bg-[#140F18]/85 border border-white/10 backdrop-blur-md opacity-70 hover:opacity-100 transition-opacity">
           {customVideoUrl && (
             <>
               <button
                 type="button"
                 onClick={togglePlay}
                 title={isPlaying ? 'Pause video' : 'Play video'}
-                className="p-1.5 rounded-lg text-[#F5F7F6] hover:bg-[#10352D] hover:text-[#B8F500] transition-colors"
+                className="p-1.5 rounded-lg text-white hover:bg-[#1F1422] hover:text-[#FFA000] transition-colors"
               >
                 {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
               </button>
@@ -317,7 +317,7 @@ export function VideoPlayer({
                 type="button"
                 onClick={toggleMute}
                 title={isMuted ? 'Unmute' : 'Mute'}
-                className="p-1.5 rounded-lg text-[#F5F7F6] hover:bg-[#10352D] hover:text-[#B8F500] transition-colors"
+                className="p-1.5 rounded-lg text-white hover:bg-[#1F1422] hover:text-[#FFA000] transition-colors"
               >
                 {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
               </button>
@@ -328,7 +328,7 @@ export function VideoPlayer({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             title="Upload custom splash video"
-            className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold text-[#19D66B] hover:text-[#B8F500] hover:bg-[#10352D] transition-colors"
+            className="flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold text-[#FF4A6B] hover:text-[#FFA000] hover:bg-[#1F1422] transition-colors"
           >
             <Upload className="w-3 h-3" />
             <span>Upload Video</span>
