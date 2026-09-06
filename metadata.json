@@ -1,0 +1,8 @@
+{
+  "name": "BillKart",
+  "description": "A modern Smart Billing, Barcode Scanning, POS and Business Management application for small businesses and shops.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
