@@ -7,18 +7,14 @@ import {
   AlertTriangle, 
   Edit3, 
   Trash2, 
-  Check, 
   X, 
-  Tag, 
-  TrendingDown, 
-  TrendingUp,
-  Camera
+  Tag
 } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { Product } from '../types';
 
 export function ProductsPage() {
-  const { products, addProduct, updateProduct, deleteProduct, openScanner } = useApp();
+  const { products, addProduct, updateProduct, deleteProduct, openScanner, language } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -33,7 +29,7 @@ export function ProductsPage() {
   const [mrp, setMrp] = useState('');
   const [stock, setStock] = useState('');
   const [minStockAlert, setMinStockAlert] = useState('5');
-  const [unit, setUnit] = useState('pack');
+  const [unit, setUnit] = useState('pcs');
 
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -52,7 +48,7 @@ export function ProductsPage() {
     setMrp('');
     setStock('20');
     setMinStockAlert('5');
-    setUnit('pack');
+    setUnit('pcs');
     setShowAddModal(true);
   };
 
@@ -102,15 +98,17 @@ export function ProductsPage() {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 select-none pb-24 lg:pb-8">
-      {/* Top Header & Search Controls */}
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-5 select-none pb-24 lg:pb-8">
+      {/* Top Header & Action Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold font-display text-white">
-            Product Catalog & Inventory
+          <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white">
+            {language === 'bn' ? 'পণ্য তালিকা ও ইনভেন্টরি' : 'Product Inventory'}
           </h2>
-          <p className="text-xs text-[#A09CA8]">
-            Manage prices, barcodes, stock levels and auto-refill alerts ({products.length} products)
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {language === 'bn'
+              ? `দোকানের পণ্য, মূল্য, বারকোড এবং স্টক ম্যানেজমেন্ট (${products.length}টি পণ্য রয়েছে)`
+              : `Manage prices, barcodes, stock levels and auto alerts (${products.length} products)`}
           </p>
         </div>
 
@@ -118,33 +116,33 @@ export function ProductsPage() {
           <button
             type="button"
             onClick={openScanner}
-            className="px-3.5 py-2.5 rounded-2xl bg-[#1F1422] hover:bg-[#FF1E42]/20 border border-white/10 text-xs font-bold text-[#FFA000] transition-colors flex items-center gap-2"
+            className="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition-colors flex items-center gap-2"
           >
-            <Barcode className="w-4 h-4 text-[#FF1E42]" />
-            <span>Scan to Check Stock</span>
+            <Barcode className="w-4 h-4 text-blue-600" />
+            <span>{language === 'bn' ? 'বারকোড স্ক্যান' : 'Barcode Scan'}</span>
           </button>
 
           <button
             type="button"
             onClick={handleOpenAdd}
-            className="px-4 py-2.5 rounded-2xl btn-primary-gradient text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
-            <span>Add New Product</span>
+            <span>{language === 'bn' ? 'নতুন পণ্য যোগ' : 'Add Product'}</span>
           </button>
         </div>
       </div>
 
-      {/* Filter Bar */}
+      {/* Search and Category Filter Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF4A6B]" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search by product title or barcode..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#140F18] border border-white/10 text-xs text-white placeholder-[#A09CA8]/60 focus:outline-none"
+            placeholder={language === 'bn' ? 'পণ্যের নাম বা বারকোড দিয়ে খুঁজুন...' : 'Search by product title or barcode...'}
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
           />
         </div>
 
@@ -154,58 +152,58 @@ export function ProductsPage() {
               key={c}
               type="button"
               onClick={() => setSelectedCategory(c)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors ${
                 selectedCategory === c
-                  ? 'btn-primary-gradient text-white'
-                  : 'bg-[#140F18] text-[#A09CA8] hover:text-white border border-white/10'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50'
               }`}
             >
-              {c}
+              {c === 'All' ? (language === 'bn' ? 'সকল পণ্য' : 'All') : c}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Products Grid Table */}
-      <div className="rounded-3xl bg-[#140F18] border border-white/10 shadow-xl overflow-hidden">
+      {/* Products Table */}
+      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-white/10 bg-[#100C14] text-[10px] uppercase tracking-wider text-[#A09CA8]">
-                <th className="py-3.5 px-4">Product & Category</th>
-                <th className="py-3.5 px-4 font-mono">Barcode</th>
-                <th className="py-3.5 px-4">Price (₹)</th>
-                <th className="py-3.5 px-4">Stock Level</th>
-                <th className="py-3.5 px-4 text-right">Actions</th>
+              <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <th className="py-3.5 px-4">{language === 'bn' ? 'পণ্য ও ক্যাটাগরি' : 'Product & Category'}</th>
+                <th className="py-3.5 px-4 font-mono">{language === 'bn' ? 'বারকোড' : 'Barcode'}</th>
+                <th className="py-3.5 px-4">{language === 'bn' ? 'বিক্রয় মূল্য' : 'Price'}</th>
+                <th className="py-3.5 px-4">{language === 'bn' ? 'স্টক' : 'Stock'}</th>
+                <th className="py-3.5 px-4 text-right">{language === 'bn' ? 'অ্যাকশন' : 'Actions'}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredProducts.map((p) => {
                 const isLowStock = p.stock <= p.minStockAlert;
                 const isOutOfStock = p.stock === 0;
 
                 return (
-                  <tr key={p.id} className="hover:bg-[#1E1422]/50 transition-colors">
+                  <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
                     <td className="py-3 px-4">
-                      <div className="font-bold text-white">{p.name}</div>
-                      <div className="text-[10px] text-[#A09CA8] flex items-center gap-1 mt-0.5">
-                        <Tag className="w-3 h-3 text-[#FF4A6B]" />
+                      <div className="font-semibold text-slate-900 dark:text-white">{p.name}</div>
+                      <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
+                        <Tag className="w-3 h-3 text-slate-400" />
                         <span>{p.category}</span>
                         <span>•</span>
                         <span>{p.unit}</span>
                       </div>
                     </td>
 
-                    <td className="py-3 px-4 font-mono text-[11px] text-[#FF4A6B]">
+                    <td className="py-3 px-4 font-mono text-xs text-slate-600 dark:text-slate-400">
                       {p.barcode}
                     </td>
 
                     <td className="py-3 px-4">
-                      <div className="font-extrabold text-sm text-white font-mono">
+                      <div className="font-bold text-sm text-slate-900 dark:text-white font-mono">
                         ₹{p.price.toFixed(2)}
                       </div>
                       {p.mrp && p.mrp > p.price && (
-                        <div className="text-[10px] text-[#A09CA8] line-through">
+                        <div className="text-[10px] text-slate-400 line-through">
                           MRP: ₹{p.mrp.toFixed(2)}
                         </div>
                       )}
@@ -214,20 +212,20 @@ export function ProductsPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`font-bold font-mono px-2 py-0.5 rounded-lg text-xs ${
+                          className={`font-semibold font-mono px-2 py-0.5 rounded-md text-xs ${
                             isOutOfStock
-                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                              ? 'bg-red-50 text-red-600 dark:bg-red-950/60 border border-red-200 dark:border-red-800'
                               : isLowStock
-                              ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
-                              : 'bg-[#FF1E42]/15 text-[#FF4A6B] border border-[#FF1E42]/30'
+                              ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800'
+                              : 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800'
                           }`}
                         >
                           {p.stock} {p.unit}
                         </span>
                         {isLowStock && (
-                          <span className="text-[10px] text-orange-400 font-semibold flex items-center gap-0.5">
+                          <span className="text-[10px] text-amber-600 font-semibold flex items-center gap-0.5">
                             <AlertTriangle className="w-3 h-3" />
-                            <span>Low!</span>
+                            <span>{language === 'bn' ? 'কম স্টক!' : 'Low!'}</span>
                           </span>
                         )}
                       </div>
@@ -238,16 +236,18 @@ export function ProductsPage() {
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(p)}
-                          className="p-1.5 rounded-lg bg-[#1F1422] text-[#FFA000] hover:bg-[#FF1E42]/20 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+                          title={language === 'bn' ? 'এডিট করুন' : 'Edit'}
                         >
-                          <Edit3 className="w-3.5 h-3.5" />
+                          <Edit3 className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => deleteProduct(p.id)}
-                          className="p-1.5 rounded-lg bg-[#1F1422] text-[#A09CA8] hover:text-red-400 hover:bg-red-500/20 transition-colors"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                          title={language === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -261,16 +261,18 @@ export function ProductsPage() {
 
       {/* ADD / EDIT PRODUCT MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg bg-[#140F18] border border-white/10 rounded-3xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="font-bold text-sm text-white font-display">
-                {editingProduct ? 'Edit Product Details' : 'Add New Inventory Product'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white font-display">
+                {editingProduct 
+                  ? (language === 'bn' ? 'পণ্য সংশোধন করুন' : 'Edit Product') 
+                  : (language === 'bn' ? 'নতুন পণ্য যুক্ত করুন' : 'Add New Product')}
               </h3>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-[#A09CA8] hover:text-white"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -278,23 +280,23 @@ export function ProductsPage() {
 
             <form onSubmit={handleSaveProduct} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                  Product Name *
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'পণ্যের নাম *' : 'Product Name *'}
                 </label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Aashirvaad Shudh Chakki Atta 5kg"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                  placeholder="যেমন: ফরচুন সরিষার তেল ১ লিটার"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                    Barcode Number *
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'bn' ? 'বারকোড নম্বর *' : 'Barcode *'}
                   </label>
                   <input
                     type="text"
@@ -302,29 +304,29 @@ export function ProductsPage() {
                     value={barcode}
                     onChange={(e) => setBarcode(e.target.value)}
                     placeholder="8901030834027"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#100C14] border border-white/15 text-xs font-mono text-[#FF4A6B] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                    Category *
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'bn' ? 'ক্যাটাগরি *' : 'Category *'}
                   </label>
                   <input
                     type="text"
                     required
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    placeholder="Grains, Dairy, Snacks..."
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                    placeholder="Grocery, Dairy, Snacks..."
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                    Selling Price (₹) *
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'bn' ? 'বিক্রয় মূল্য (₹) *' : 'Price (₹) *'}
                   </label>
                   <input
                     type="number"
@@ -333,13 +335,13 @@ export function ProductsPage() {
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="120"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                    MRP (₹)
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'bn' ? 'এমআরপি (₹)' : 'MRP (₹)'}
                   </label>
                   <input
                     type="number"
@@ -347,28 +349,28 @@ export function ProductsPage() {
                     value={mrp}
                     onChange={(e) => setMrp(e.target.value)}
                     placeholder="140"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                    Unit
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'bn' ? 'একক (Unit)' : 'Unit'}
                   </label>
                   <input
                     type="text"
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
-                    placeholder="kg, pack, bottle"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                    placeholder="kg, pcs, pack"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                    Current Stock Quantity *
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'bn' ? 'বর্তমান স্টক *' : 'Stock Quantity *'}
                   </label>
                   <input
                     type="number"
@@ -376,13 +378,13 @@ export function ProductsPage() {
                     value={stock}
                     onChange={(e) => setStock(e.target.value)}
                     placeholder="25"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                    Low Stock Alert Threshold
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    {language === 'bn' ? 'কম স্টক এলার্ট লিমিট' : 'Low Stock Alert'}
                   </label>
                   <input
                     type="number"
@@ -390,7 +392,7 @@ export function ProductsPage() {
                     value={minStockAlert}
                     onChange={(e) => setMinStockAlert(e.target.value)}
                     placeholder="5"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                   />
                 </div>
               </div>
@@ -398,16 +400,18 @@ export function ProductsPage() {
               <div className="flex gap-2.5 pt-3">
                 <button
                   type="submit"
-                  className="flex-1 py-3 rounded-xl btn-primary-gradient text-white font-extrabold text-xs shadow-md"
+                  className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors"
                 >
-                  {editingProduct ? 'Update Product' : 'Save New Product'}
+                  {editingProduct 
+                    ? (language === 'bn' ? 'তথ্য আপডেট করুন' : 'Update Product') 
+                    : (language === 'bn' ? 'পণ্য সেভ করুন' : 'Save Product')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-5 py-3 rounded-xl bg-[#1F1422] text-[#A09CA8] text-xs font-semibold"
+                  className="px-5 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-semibold transition-colors"
                 >
-                  Cancel
+                  {language === 'bn' ? 'বাতিল' : 'Cancel'}
                 </button>
               </div>
             </form>

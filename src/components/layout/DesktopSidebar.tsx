@@ -8,10 +8,10 @@ import {
   BarChart3, 
   Settings, 
   HelpCircle, 
-  Store, 
   PlusCircle, 
+  LogOut,
   Sparkles,
-  ChevronRight
+  Compass
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { BillKartLogo } from '../BillKartLogo';
@@ -26,18 +26,18 @@ interface NavItem {
 }
 
 export function DesktopSidebar() {
-  const { currentView, setCurrentView, business, openScanner, cartItems } = useApp();
+  const { currentView, setCurrentView, business, openScanner, cartItems, t, logout, language } = useApp();
 
   const navItems: NavItem[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'create-bill', label: 'Create Bill', icon: PlusCircle, badge: cartItems.length > 0 ? `${cartItems.length}` : undefined },
-    { id: 'scan-product', label: 'Scan Product', icon: Barcode, isAction: true },
-    { id: 'products', label: 'Products & Stock', icon: Package },
-    { id: 'customers', label: 'Customers', icon: Users },
-    { id: 'bills', label: 'Bills History', icon: FileText },
-    { id: 'reports', label: 'Reports & Analytics', icon: BarChart3 },
-    { id: 'settings', label: 'Business Settings', icon: Settings },
-    { id: 'help', label: 'Help & Support', icon: HelpCircle },
+    { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard },
+    { id: 'create-bill', label: t('navCreateBill'), icon: PlusCircle, badge: cartItems.length > 0 ? `${cartItems.length}` : undefined },
+    { id: 'scan-product', label: t('navScanBarcode'), icon: Barcode, isAction: true },
+    { id: 'products', label: t('navProducts'), icon: Package },
+    { id: 'customers', label: t('navCustomers'), icon: Users },
+    { id: 'bills', label: t('navBills'), icon: FileText },
+    { id: 'reports', label: t('navReports'), icon: BarChart3 },
+    { id: 'settings', label: t('navSettings'), icon: Settings },
+    { id: 'help', label: t('navHelp'), icon: HelpCircle },
   ];
 
   const handleNavClick = (item: NavItem) => {
@@ -49,25 +49,25 @@ export function DesktopSidebar() {
   };
 
   return (
-    <aside className="hidden lg:flex flex-col w-64 h-screen bg-[#100C14] border-r border-white/10 text-[#F5F5F7] sticky top-0 z-30 select-none">
+    <aside className="hidden lg:flex flex-col w-64 h-screen bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 sticky top-0 z-30 select-none">
       {/* Brand Header */}
-      <div className="p-5 border-b border-white/10">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
-          <BillKartLogo size="sm" showTagline={false} showScript={false} animate={false} horizontal={true} />
-          <div className="flex-1 min-w-0">
-            <span className="text-xs font-bold font-display text-white block truncate">
-              {business.shopName}
-            </span>
-            <div className="flex items-center gap-1.5 text-[10px] text-[#FFA000]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FF1E42] animate-pulse" />
-              <span>POS Terminal Active</span>
-            </div>
+          <BillKartLogo size="sm" showTagline={false} horizontal={true} />
+        </div>
+        <div className="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
+          <span className="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[150px]">
+            {business.shopName || 'Retail Store'}
+          </span>
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-200/60 dark:border-emerald-800/60">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>Active</span>
           </div>
         </div>
       </div>
 
       {/* Main Navigation Items */}
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
@@ -78,66 +78,49 @@ export function DesktopSidebar() {
               type="button"
               id={`sidebar-nav-${item.id}`}
               onClick={() => handleNavClick(item)}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition-all duration-200 group ${
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-150 ${
                 isActive
-                  ? 'bg-[#27131F] text-[#FFA000] border border-[#FF1E42]/35 shadow-[0_4px_14px_rgba(255,30,66,0.18)]'
-                  : 'text-[#A09CA8] hover:text-white hover:bg-[#1C121D]'
+                  ? 'bg-blue-50 dark:bg-blue-950/70 text-blue-700 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`p-1.5 rounded-xl transition-colors ${
-                    isActive
-                      ? 'bg-[#FF1E42]/20 text-[#FFA000]'
-                      : 'text-[#A09CA8] group-hover:text-[#FF4A6B]'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                </div>
+              <div className="flex items-center gap-2.5">
+                <Icon className={`w-4 h-4 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500'}`} />
                 <span>{item.label}</span>
               </div>
 
               {item.badge && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FF1E42] text-white">
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-600 text-white">
                   {item.badge}
                 </span>
-              )}
-
-              {isActive && (
-                <ChevronRight className="w-3.5 h-3.5 text-[#FFA000]" />
               )}
             </button>
           );
         })}
       </nav>
 
-      {/* Quick POS Terminal Card in sidebar */}
-      <div className="p-3 m-3 rounded-2xl bg-[#18111D] border border-white/10">
-        <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="text-[#A09CA8]">Active Cart</span>
-          <span className="font-bold text-[#FFA000]">{cartItems.length} items</span>
-        </div>
+      {/* Footer Info & Logout */}
+      <div className="p-3 border-t border-slate-200 dark:border-slate-800 space-y-2">
         <button
           type="button"
-          onClick={() => setCurrentView('create-bill')}
-          className="w-full py-2 rounded-xl btn-primary-gradient text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-1.5"
+          onClick={() => setCurrentView('onboarding')}
+          className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
-          <ReceiptText className="w-3.5 h-3.5" />
-          <span>Go to Billing</span>
+          <Compass className="w-4 h-4 text-blue-600" />
+          <span>{language === 'bn' ? 'অ্যাপ গাইড ও টিউটোরিয়াল' : 'Feature Guide'}</span>
         </button>
-      </div>
 
-      {/* Bottom Profile Footer */}
-      <div className="p-3.5 border-t border-white/10 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-8 h-8 rounded-full bg-[#27131F] border border-[#FF1E42]/30 flex items-center justify-center font-bold text-[#FFA000]">
-            {business.ownerName ? business.ownerName[0] : 'S'}
+        <button
+          type="button"
+          onClick={logout}
+          className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <LogOut className="w-4 h-4" />
+            <span>{language === 'bn' ? 'লগ আউট' : 'Log Out'}</span>
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-bold text-white truncate">{business.ownerName}</p>
-            <p className="text-[10px] text-[#A09CA8] truncate">{business.phone}</p>
-          </div>
-        </div>
+          <span className="text-[10px] text-slate-400">{business.ownerName?.split(' ')[0]}</span>
+        </button>
       </div>
     </aside>
   );

@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { AppProvider, useApp } from './contexts/AppContext';
 import { SplashScreen } from './pages/SplashScreen';
+import { LanguageSelectionScreen } from './pages/LanguageSelectionScreen';
 import { OnboardingScreen } from './pages/OnboardingScreen';
 import { AuthScreen } from './pages/AuthScreen';
 import { BusinessSetupScreen } from './pages/BusinessSetupScreen';
@@ -33,7 +34,9 @@ function MainAppContent() {
     currentView, 
     setCurrentView, 
     isScannerOpen, 
-    closeScanner 
+    closeScanner,
+    themeMode,
+    resolvedTheme
   } = useApp();
 
   const [showScreenNavigator, setShowScreenNavigator] = useState(false);
@@ -42,7 +45,15 @@ function MainAppContent() {
   if (currentView === 'splash') {
     return (
       <SplashScreen 
-        onComplete={() => setCurrentView('dashboard')} 
+        onComplete={() => setCurrentView('onboarding')} 
+      />
+    );
+  }
+
+  if (currentView === 'language-select') {
+    return (
+      <LanguageSelectionScreen 
+        onSelectLanguage={(_lang) => setCurrentView('onboarding')} 
       />
     );
   }
@@ -84,7 +95,7 @@ function MainAppContent() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#070709] text-[#F5F5F7] flex overflow-x-hidden">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex overflow-x-hidden">
       {/* Desktop Sidebar (Left side, sticky) */}
       <DesktopSidebar />
 
@@ -92,58 +103,6 @@ function MainAppContent() {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Header */}
         <AppHeader />
-
-        {/* Global Screen Switcher Chip for Instant Evaluation/Testing */}
-        <div className="bg-[#140F18]/80 border-b border-white/10 px-4 py-1.5 flex items-center justify-between text-[11px] select-none">
-          <div className="flex items-center gap-1.5 text-[#A09CA8]">
-            <span className="w-2 h-2 rounded-full bg-[#FF1E42] animate-pulse" />
-            <span className="font-semibold">Screen:</span>
-            <span className="font-bold text-[#FFA000] uppercase font-mono">{currentView}</span>
-          </div>
-
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setCurrentView('splash')}
-              title="Test Screen 01 Preloader"
-              className="px-2 py-0.5 rounded-md bg-[#1F1422] hover:bg-[#FF1E42]/20 text-[10px] font-bold text-[#A09CA8] hover:text-[#FFA000] transition-colors"
-            >
-              Splash
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentView('onboarding')}
-              title="Test Screen 02 Onboarding"
-              className="px-2 py-0.5 rounded-md bg-[#1F1422] hover:bg-[#FF1E42]/20 text-[10px] font-bold text-[#A09CA8] hover:text-[#FFA000] transition-colors"
-            >
-              Intro
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentView('auth')}
-              title="Test Screen 03 Login/Signup"
-              className="px-2 py-0.5 rounded-md bg-[#1F1422] hover:bg-[#FF1E42]/20 text-[10px] font-bold text-[#A09CA8] hover:text-[#FFA000] transition-colors"
-            >
-              Auth
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentView('business-setup')}
-              title="Test Screen 04 Business Setup"
-              className="px-2 py-0.5 rounded-md bg-[#1F1422] hover:bg-[#FF1E42]/20 text-[10px] font-bold text-[#A09CA8] hover:text-[#FFA000] transition-colors"
-            >
-              Setup
-            </button>
-            <button
-              type="button"
-              onClick={() => setCurrentView('create-bill')}
-              title="Go to Smart Billing"
-              className="px-2 py-0.5 rounded-md btn-primary-gradient text-[10px] font-bold text-white shadow-sm"
-            >
-              POS
-            </button>
-          </div>
-        </div>
 
         {/* Dynamic Page Container */}
         <main className="flex-1 overflow-y-auto">

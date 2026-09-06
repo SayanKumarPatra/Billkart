@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import QRCode from 'qrcode';
 import confetti from 'canvas-confetti';
 import { 
@@ -10,16 +10,23 @@ import {
   Building2, 
   CheckCircle2, 
   Loader2, 
-  AlertCircle, 
   Receipt, 
   PlusCircle, 
-  ArrowRight,
   ShieldCheck,
-  Share2
+  Printer,
+  Share2,
+  Copy,
+  Check,
+  FileText,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Bill, PaymentMethod, PaymentStatus } from '../../types';
 import { useApp } from '../../contexts/AppContext';
+import { playSound } from '../../utils/audioHelper';
 import { playPaymentSuccessSound } from '../../utils/soundEffects';
+import { printReceipt } from '../../utils/printHelper';
+import { sendBillViaWhatsApp, copyBillToClipboard } from '../../utils/whatsappHelper';
+import { downloadBillDirect } from '../../utils/downloadHelper';
 
 interface PaymentModalProps {
   bill: Bill;
@@ -36,15 +43,25 @@ export function PaymentModal({
   onPaymentSuccess,
   onViewInvoice,
 }: PaymentModalProps) {
-  const { business, markBillAsPaid, clearCart, setCurrentView } = useApp();
+  const { business, markBillAsPaid, clearCart, setCurrentView, language } = useApp();
+  const isBn = language === 'bn';
+
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('UPI');
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(bill.paymentStatus || 'PENDING');
+  const [currentBill, setCurrentBill] = useState<Bill>(bill);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
   const [cashTendered, setCashTendered] = useState<string>(String(Math.ceil(bill.grandTotal)));
+  const [copied, setCopied] = useState(false);
+  const [downloadingFormat, setDownloadingFormat] = useState<'pdf' | 'jpg' | null>(null);
+
+  // Sync currentBill if bill prop changes
+  useEffect(() => {
+    setCurrentBill(bill);
+    setPaymentStatus(bill.paymentStatus || 'PENDING');
+  }, [bill]);
 
   // Generate UPI URI String
-  // upi://pay?pa=...&pn=...&am=...&cu=INR&tn=...
-  const upiUri = `upi://pay?pa=${encodeURIComponent(business.upiId || 'billkart.store@okhdfcbank')}&pn=${encodeURIComponent(business.shopName)}&am=${bill.grandTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Bill ${bill.billNumber}`)}`;
+  const upiUri = `upi://pay?pa=${encodeURIComponent(business.upiId || '9876543210@upi')}&pn=${encodeURIComponent(business.shopName)}&am=${bill.grandTotal.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Bill ${bill.billNumber}`)}`;
 
   // Generate crisp QR code data URL using `qrcode`
   useEffect(() => {
@@ -53,8 +70,8 @@ export function PaymentModal({
         width: 320,
         margin: 2,
         color: {
-          dark: '#070709',
-          light: '#FFFFFF',
+          dark: '#0f172a',
+          light: '#ffffff',
         },
       })
         .then(url => setQrDataUrl(url))
@@ -67,29 +84,69 @@ export function PaymentModal({
     playPaymentSuccessSound();
     try {
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 50,
+        spread: 60,
         origin: { y: 0.6 },
-        colors: ['#FF1E42', '#FF6A00', '#FFA000', '#FFFFFF'],
       });
-    } catch (e) {
-      // Confetti fallback
+    } catch {
+      // safe fallback
     }
   };
 
   const handleSimulatePayment = () => {
+    playSound('scan');
     setPaymentStatus('PROCESSING');
+
     setTimeout(() => {
-      const ref = `UPI-REF-${Date.now().toString().slice(-8)}`;
-      setPaymentStatus('SUCCESS');
-      markBillAsPaid(bill.id, ref);
       triggerCelebration();
-      const updated = { ...bill, paymentStatus: 'SUCCESS' as PaymentStatus, paymentReference: ref, paymentMethod: selectedMethod };
-      onPaymentSuccess(updated);
-    }, 1200);
+      setPaymentStatus('SUCCESS');
+
+      const updatedBill: Bill = {
+        ...bill,
+        paymentStatus: 'SUCCESS',
+        paymentMethod: selectedMethod,
+        paymentReference: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
+      };
+
+      setCurrentBill(updatedBill);
+      markBillAsPaid(updatedBill.id, updatedBill.paymentReference);
+      onPaymentSuccess(updatedBill);
+    }, 850);
+  };
+
+  const handlePrintInstant = () => {
+    playSound('click');
+    printReceipt(currentBill, business, 'thermal', language);
+  };
+
+  const handleWhatsAppInstant = () => {
+    playSound('click');
+    sendBillViaWhatsApp(currentBill, business, undefined, language);
+  };
+
+  const handleCopyInstant = async () => {
+    playSound('click');
+    const success = await copyBillToClipboard(currentBill, business, language);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleDownloadInstant = async (format: 'pdf' | 'jpg') => {
+    playSound('click');
+    setDownloadingFormat(format);
+    try {
+      await downloadBillDirect(currentBill, business, format, language);
+    } catch (err) {
+      console.error('Download error:', err);
+    } finally {
+      setDownloadingFormat(null);
+    }
   };
 
   const handleStartNewBill = () => {
+    playSound('click');
     clearCart();
     onClose();
     setCurrentView('create-bill');
@@ -98,25 +155,27 @@ export function PaymentModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-4 select-none">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4 select-none">
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 15 }}
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="relative w-full max-w-lg bg-[#100C14] rounded-3xl border border-white/10 shadow-2xl overflow-hidden max-h-[95vh] flex flex-col"
+        exit={{ opacity: 0, scale: 0.96, y: 10 }}
+        className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[92vh] flex flex-col"
       >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-white/10 bg-[#140F18] flex items-center justify-between">
+        <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#1F1422] border border-white/10 flex items-center justify-center text-[#FFA000]">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 flex items-center justify-center">
               <QrCode className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm text-white font-display">
-                {paymentStatus === 'SUCCESS' ? 'Payment Completed' : 'Payment Collection'}
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white font-display">
+                {paymentStatus === 'SUCCESS'
+                  ? (isBn ? 'পেমেন্ট সম্পন্ন হয়েছে' : 'Payment Received')
+                  : (isBn ? 'পেমেন্ট গ্রহণ করুন' : 'Accept Payment')}
               </h3>
-              <p className="text-[11px] text-[#A09CA8]">
-                Bill #{bill.billNumber} • {bill.customerName}
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                #{bill.billNumber} • {bill.customerName}
               </p>
             </div>
           </div>
@@ -124,178 +183,230 @@ export function PaymentModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-xl bg-[#1F1422] text-[#A09CA8] hover:text-white transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Content Area */}
+        {/* Content */}
         <div className="p-5 overflow-y-auto space-y-4">
           {paymentStatus === 'SUCCESS' ? (
             /* SUCCESS STATE */
-            <div className="text-center py-4 space-y-4">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                className="w-18 h-18 mx-auto rounded-3xl btn-primary-gradient p-1 shadow-[0_0_30px_rgba(255,30,66,0.5)]"
-              >
-                <div className="w-full h-full bg-[#100C14] rounded-[22px] flex items-center justify-center text-[#FFA000]">
-                  <CheckCircle2 className="w-10 h-10" />
-                </div>
-              </motion.div>
+            <div className="text-center py-2 space-y-3.5">
+              <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 text-emerald-600 flex items-center justify-center shadow-xs">
+                <CheckCircle2 className="w-7 h-7" />
+              </div>
 
               <div className="space-y-1">
-                <span className="text-[11px] font-bold text-[#FFA000] uppercase tracking-wider bg-[#1F1422] px-3 py-1 rounded-full border border-white/10">
-                  Payment Received
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/80 px-3 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
+                  {isBn ? 'টাকা গ্রহণ সম্পন্ন' : 'Payment Successful'}
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-black text-white font-display pt-2">
+                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display pt-1">
                   ₹{bill.grandTotal.toFixed(2)}
                 </h2>
-                <p className="text-xs text-[#A09CA8]">
-                  Paid via {selectedMethod} • Ref: {bill.paymentReference || 'TXN-CONFIRMED'}
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {isBn ? 'পেমেন্ট মাধ্যম' : 'Paid via'}: {currentBill.paymentMethod} • Ref: {currentBill.paymentReference || 'CONFIRMED'}
                 </p>
               </div>
 
               {/* Bill Details Summary Card */}
-              <div className="p-4 rounded-2xl bg-[#140F18] border border-white/10 text-xs space-y-2 text-left">
-                <div className="flex justify-between text-[#A09CA8]">
-                  <span>Bill Number:</span>
-                  <span className="font-bold text-white">{bill.billNumber}</span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs space-y-1.5 text-left">
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                  <span>{isBn ? 'বিল নম্বর:' : 'Bill Number:'}</span>
+                  <span className="font-bold text-slate-900 dark:text-white font-mono">#{bill.billNumber}</span>
                 </div>
-                <div className="flex justify-between text-[#A09CA8]">
-                  <span>Customer:</span>
-                  <span className="font-semibold text-white">{bill.customerName}</span>
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                  <span>{isBn ? 'ক্রেতা:' : 'Customer:'}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">
+                    {bill.customerName} ({bill.customerPhone})
+                  </span>
                 </div>
-                <div className="flex justify-between text-[#A09CA8]">
-                  <span>Date & Time:</span>
-                  <span className="font-semibold text-white">{bill.date} at {bill.time}</span>
-                </div>
-                <div className="flex justify-between text-[#A09CA8]">
-                  <span>Items:</span>
-                  <span className="font-semibold text-[#FFA000]">{bill.items.length} products</span>
+                <div className="flex justify-between text-slate-600 dark:text-slate-400">
+                  <span>{isBn ? 'পণ্য সংখ্যা:' : 'Items Count:'}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{bill.items.length} {isBn ? 'টি পণ্য' : 'products'}</span>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => onViewInvoice(bill)}
-                  className="flex-1 py-3 rounded-2xl bg-[#1F1422] hover:bg-[#FF1E42]/20 border border-white/10 text-xs font-bold text-[#FFA000] transition-colors flex items-center justify-center gap-2"
-                >
-                  <Receipt className="w-4 h-4" />
-                  <span>View & Print Invoice</span>
-                </button>
+              {/* Instant Print & WhatsApp High-Priority Actions */}
+              <div className="space-y-2 pt-1">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePrintInstant}
+                    className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>{isBn ? 'রসিদ প্রিন্ট করুন' : 'Print Receipt'}</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={handleStartNewBill}
-                  className="flex-1 py-3 rounded-2xl btn-primary-gradient text-white text-xs font-extrabold shadow-lg transition-all flex items-center justify-center gap-2"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Create Next Bill</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={handleWhatsAppInstant}
+                    className="py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    <span>{isBn ? 'হোয়াটসঅ্যাপে পাঠান' : 'Send WhatsApp'}</span>
+                  </button>
+                </div>
+
+                {/* PDF & JPG Download Options */}
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadInstant('pdf')}
+                    disabled={downloadingFormat !== null}
+                    className="py-2.5 px-3 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-900 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {downloadingFormat === 'pdf' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <FileText className="w-4 h-4" />
+                    )}
+                    <span>{isBn ? 'PDF ডাউনলোড' : 'Download PDF'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadInstant('jpg')}
+                    disabled={downloadingFormat !== null}
+                    className="py-2.5 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-900 text-xs font-bold transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                  >
+                    {downloadingFormat === 'jpg' ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <ImageIcon className="w-4 h-4" />
+                    )}
+                    <span>{isBn ? 'JPG ছবি ডাউনলোড' : 'Download JPG'}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1.5">
+                  <button
+                    type="button"
+                    onClick={handleCopyInstant}
+                    className="py-2 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center gap-1"
+                  >
+                    {copied ? <Check className="w-3 h-3 text-emerald-600 stroke-[3]" /> : <Copy className="w-3 h-3" />}
+                    <span>{copied ? (isBn ? 'কপি হয়েছে' : 'Copied') : (isBn ? 'টেক্সট কপি' : 'Copy')}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => onViewInvoice(currentBill)}
+                    className="py-2 px-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-[11px] font-semibold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <Receipt className="w-3 h-3 text-blue-600" />
+                    <span>{isBn ? 'মেমো দেখুন' : 'Full Invoice'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleStartNewBill}
+                    className="py-2 px-2 rounded-xl bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-slate-900 text-[11px] font-bold shadow-xs transition-colors flex items-center justify-center gap-1"
+                  >
+                    <PlusCircle className="w-3 h-3" />
+                    <span>{isBn ? 'পরের বিল' : 'Next Bill'}</span>
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
             /* PAYMENT SELECTION & UPI QR STATE */
             <>
-              {/* Payment Methods Selector Tabs */}
-              <div className="grid grid-cols-4 gap-1.5 p-1 bg-[#140F18] rounded-2xl border border-white/10">
+              {/* Payment Methods */}
+              <div className="grid grid-cols-4 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
                 {(['UPI', 'CASH', 'CARD', 'BANK_TRANSFER'] as PaymentMethod[]).map((method) => (
                   <button
                     key={method}
                     type="button"
                     onClick={() => setSelectedMethod(method)}
-                    className={`py-2 text-[11px] font-bold rounded-xl transition-all flex flex-col items-center gap-1 ${
+                    className={`py-2 text-xs font-bold rounded-lg transition-colors flex flex-col items-center gap-1 ${
                       selectedMethod === method
-                        ? 'bg-[#1F1422] text-[#FFA000] border border-white/10 shadow-sm'
-                        : 'text-[#A09CA8] hover:text-white'
+                        ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-400'
                     }`}
                   >
                     {method === 'UPI' && <QrCode className="w-4 h-4" />}
                     {method === 'CASH' && <Banknote className="w-4 h-4" />}
                     {method === 'CARD' && <CreditCard className="w-4 h-4" />}
                     {method === 'BANK_TRANSFER' && <Building2 className="w-4 h-4" />}
-                    <span>{method === 'BANK_TRANSFER' ? 'NetBanking' : method}</span>
+                    <span>
+                      {method === 'UPI' ? 'UPI QR' :
+                       method === 'CASH' ? (isBn ? 'নগদ' : 'Cash') :
+                       method === 'CARD' ? 'Card' : 'Bank'}
+                    </span>
                   </button>
                 ))}
               </div>
 
               {/* Amount Box */}
-              <div className="p-3.5 rounded-2xl bg-[#140F18] border border-white/10 flex items-center justify-between">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] text-[#A09CA8] uppercase font-bold tracking-wider">Total Amount Due</span>
-                  <div className="text-2xl font-black text-white font-display">
+                  <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+                    {isBn ? 'মোট প্রদেয় বিলের পরিমাণ' : 'Total Amount Due'}
+                  </span>
+                  <div className="text-2xl font-black text-slate-900 dark:text-white font-display">
                     ₹{bill.grandTotal.toFixed(2)}
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] text-[#FFA000] font-mono bg-[#1F1422] px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-semibold text-blue-600">
                     {business.shopName}
                   </span>
-                  <p className="text-[10px] text-[#A09CA8] mt-1">{bill.customerName}</p>
+                  <p className="text-[11px] text-slate-500">{bill.customerName}</p>
                 </div>
               </div>
 
               {/* UPI MODE: DYNAMIC QR DISPLAY */}
               {selectedMethod === 'UPI' && (
-                <div className="p-5 rounded-2xl bg-[#140F18] border border-white/10 flex flex-col items-center text-center space-y-3">
-                  <div className="bg-white p-3 rounded-2xl shadow-[0_0_20px_rgba(255,30,66,0.2)]">
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/80 flex flex-col items-center text-center space-y-2.5">
+                  <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
                     {qrDataUrl ? (
                       <img
                         src={qrDataUrl}
-                        alt="Dynamic UPI Payment QR"
-                        className="w-48 h-48 sm:w-52 sm:h-52 object-contain"
+                        alt="Dynamic UPI QR"
+                        className="w-44 h-44 object-contain"
                       />
                     ) : (
-                      <div className="w-48 h-48 flex items-center justify-center">
-                        <Loader2 className="w-6 h-6 animate-spin text-[#FF1E42]" />
+                      <div className="w-44 h-44 flex items-center justify-center">
+                        <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
                       </div>
                     )}
                   </div>
 
-                  {/* UPI Apps supported pills */}
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-white">
-                      Scan with any UPI App
-                    </p>
-                    <div className="flex items-center justify-center gap-2 text-[10px] font-semibold text-[#A09CA8]">
-                      <span className="px-2 py-0.5 rounded-md bg-[#1F1422] text-[#FFA000]">Google Pay</span>
-                      <span className="px-2 py-0.5 rounded-md bg-[#1F1422] text-[#FFA000]">PhonePe</span>
-                      <span className="px-2 py-0.5 rounded-md bg-[#1F1422] text-[#FFA000]">Paytm</span>
-                      <span className="px-2 py-0.5 rounded-md bg-[#1F1422] text-[#FFA000]">BHIM</span>
-                    </div>
-                  </div>
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    {isBn ? 'যেকোনো ইউপিআই অ্যাপ দিয়ে স্ক্যান করুন' : 'Scan using GPay, PhonePe, Paytm'}
+                  </p>
 
-                  <p className="text-[10px] font-mono text-[#A09CA8] truncate max-w-xs">
-                    UPI ID: <span className="text-[#FFA000]">{business.upiId}</span>
+                  <p className="text-[11px] font-mono text-slate-500 truncate max-w-xs">
+                    UPI: <span className="font-semibold text-slate-700 dark:text-slate-300">{business.upiId}</span>
                   </p>
                 </div>
               )}
 
               {/* CASH MODE */}
               {selectedMethod === 'CASH' && (
-                <div className="p-4 rounded-2xl bg-[#140F18] border border-white/10 space-y-3">
-                  <span className="text-xs font-bold text-white block">Cash Register Tender</span>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#FF4A6B]">₹</span>
-                      <input
-                        type="number"
-                        value={cashTendered}
-                        onChange={(e) => setCashTendered(e.target.value)}
-                        placeholder="Amount received from customer"
-                        className="w-full pl-8 pr-3 py-2 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
-                      />
-                    </div>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-3">
+                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+                    {isBn ? 'ক্যাশ টাকা গ্রহণ' : 'Cash Received'}
+                  </span>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
+                    <input
+                      type="number"
+                      value={cashTendered}
+                      onChange={(e) => setCashTendered(e.target.value)}
+                      placeholder="ক্রেতার প্রদত্ত অর্থ"
+                      className="w-full pl-8 pr-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                    />
                   </div>
                   {parseFloat(cashTendered) >= bill.grandTotal && (
-                    <div className="p-2.5 rounded-xl bg-[#1F1422] border border-white/10 flex justify-between items-center text-xs">
-                      <span className="text-[#A09CA8]">Return Change to Customer:</span>
-                      <span className="font-extrabold text-[#FFA000]">
+                    <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex justify-between items-center text-xs">
+                      <span className="text-emerald-700 dark:text-emerald-400 font-semibold">
+                        {isBn ? 'ক্রেতাকে ফেরত দিন:' : 'Change to Return:'}
+                      </span>
+                      <span className="font-black text-emerald-800 dark:text-emerald-300 font-mono">
                         ₹{(parseFloat(cashTendered) - bill.grandTotal).toFixed(2)}
                       </span>
                     </div>
@@ -303,66 +414,23 @@ export function PaymentModal({
                 </div>
               )}
 
-              {/* CARD MODE */}
-              {selectedMethod === 'CARD' && (
-                <div className="p-4 rounded-2xl bg-[#140F18] border border-white/10 text-center space-y-2">
-                  <CreditCard className="w-8 h-8 text-[#FF4A6B] mx-auto" />
-                  <p className="text-xs font-bold text-white">Swipe / Tap on POS Card Terminal</p>
-                  <p className="text-[11px] text-[#A09CA8]">
-                    Process ₹{bill.grandTotal.toFixed(2)} on your wireless EDC terminal, then confirm below.
-                  </p>
-                </div>
-              )}
-
-              {/* NETBANKING MODE */}
-              {selectedMethod === 'BANK_TRANSFER' && (
-                <div className="p-4 rounded-2xl bg-[#140F18] border border-white/10 text-xs space-y-2">
-                  <div className="flex justify-between text-[#A09CA8]">
-                    <span>Account Name:</span>
-                    <span className="font-bold text-white">{business.shopName}</span>
-                  </div>
-                  <div className="flex justify-between text-[#A09CA8]">
-                    <span>Account Number:</span>
-                    <span className="font-mono text-[#FFA000]">50200084729103</span>
-                  </div>
-                  <div className="flex justify-between text-[#A09CA8]">
-                    <span>IFSC Code:</span>
-                    <span className="font-mono text-[#FFA000]">HDFC0001234</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Live Payment Status & Action Buttons */}
-              <div className="space-y-2 pt-2">
-                <div className="flex items-center justify-between text-[11px] px-1">
-                  <span className="text-[#A09CA8]">Current Status:</span>
-                  <span
-                    className={`font-bold px-2 py-0.5 rounded-md ${
-                      paymentStatus === 'PROCESSING'
-                        ? 'bg-yellow-500/20 text-yellow-400 animate-pulse'
-                        : 'bg-orange-500/20 text-orange-400'
-                    }`}
-                  >
-                    {paymentStatus}
-                  </span>
-                </div>
-
-                {/* Confirm Payment Button */}
+              {/* Confirm Payment Button */}
+              <div className="pt-2">
                 <button
                   type="button"
                   disabled={paymentStatus === 'PROCESSING'}
                   onClick={handleSimulatePayment}
-                  className="w-full py-3.5 rounded-2xl btn-primary-gradient text-white font-extrabold text-xs sm:text-sm shadow-[0_6px_20px_rgba(255,30,66,0.35)] transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm shadow-xs transition-colors flex items-center justify-center gap-2"
                 >
                   {paymentStatus === 'PROCESSING' ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Verifying Payment...</span>
+                      <span>{isBn ? 'পেমেন্ট যাচাই করা হচ্ছে...' : 'Verifying...'}</span>
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="w-4 h-4" />
-                      <span>Mark as Paid (Confirm Payment)</span>
+                      <span>{isBn ? 'পেমেন্ট সফল হয়েছে (কনফার্ম করুন)' : 'Confirm Payment'}</span>
                     </>
                   )}
                 </button>

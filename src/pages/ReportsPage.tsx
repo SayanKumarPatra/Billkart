@@ -1,19 +1,16 @@
-import { useState } from 'react';
 import { 
   BarChart3, 
   TrendingUp, 
-  DollarSign, 
   Receipt, 
   ShoppingBag, 
   Award, 
-  Calendar,
   CreditCard,
   QrCode
 } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 
 export function ReportsPage() {
-  const { bills, products, business } = useApp();
+  const { bills, language } = useApp();
 
   const totalRevenue = bills.reduce((acc, b) => acc + b.grandTotal, 0);
   const totalBills = bills.length;
@@ -45,75 +42,89 @@ export function ReportsPage() {
   );
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 select-none pb-24 lg:pb-8">
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-5 select-none pb-24 lg:pb-8">
       {/* Header */}
       <div>
-        <h2 className="text-xl font-bold font-display text-white">
-          Sales Reports & Performance Analytics
+        <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white">
+          {language === 'bn' ? 'বিক্রয় রিপোর্ট ও অ্যানালিটিক্স' : 'Sales Reports & Analytics'}
         </h2>
-        <p className="text-xs text-[#A09CA8]">
-          Comprehensive revenue metrics, average transaction size, and top selling stock
+        <p className="text-xs text-slate-500 dark:text-slate-400">
+          {language === 'bn' 
+            ? 'দোকানের মোট আয়, গড় বিল সাইজ ও সর্বাধিক বিক্রিত পণ্যের বিশ্লেষণ' 
+            : 'Revenue metrics, average ticket size, and best selling inventory'}
         </p>
       </div>
 
-      {/* KPI Top Cards */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Total Lifetime Revenue</span>
-          <div className="text-2xl sm:text-3xl font-black text-white font-display mt-2">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {language === 'bn' ? 'মোট বিক্রয় রাজস্ব' : 'Total Revenue'}
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-2">
             ₹{totalRevenue.toFixed(2)}
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-[#FFA000] mt-1 font-semibold">
+          <div className="flex items-center gap-1 text-xs text-emerald-600 mt-1 font-semibold">
             <TrendingUp className="w-3.5 h-3.5" />
-            <span>Healthy cashflow</span>
+            <span>{language === 'bn' ? 'সুস্থ ক্যাশফ্লো' : 'Healthy cashflow'}</span>
           </div>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Average Bill Value</span>
-          <div className="text-2xl sm:text-3xl font-black text-[#FFA000] font-display mt-2">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {language === 'bn' ? 'গড় বিলের পরিমাণ' : 'Average Bill Value'}
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-blue-600 font-display mt-2">
             ₹{avgBillValue.toFixed(2)}
           </div>
-          <p className="text-[11px] text-[#A09CA8] mt-1">Per customer transaction</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {language === 'bn' ? 'প্রতি খরিদ্দারের গড় খরচ' : 'Per transaction average'}
+          </p>
         </div>
 
-        <div className="p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Invoices Processed</span>
-          <div className="text-2xl sm:text-3xl font-black text-[#FF4A6B] font-display mt-2">
-            {totalBills} bills
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {language === 'bn' ? 'মোট বিল প্রক্রিয়া' : 'Invoices Processed'}
+          </span>
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display mt-2">
+            {totalBills} {language === 'bn' ? 'টি' : 'bills'}
           </div>
-          <p className="text-[11px] text-[#A09CA8] mt-1">Zero billing errors recorded</p>
+          <p className="text-xs text-slate-500 mt-1">
+            {language === 'bn' ? 'কোনো ভুল ছাড়া সফল হিসাব' : '100% accurate record'}
+          </p>
         </div>
       </div>
 
       {/* Grid: Top Selling Products + Payment Modes Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Top Selling Items */}
-        <div className="p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-xl space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-white/10">
-            <Award className="w-4 h-4 text-[#FFA000]" />
-            <h3 className="font-bold text-sm text-white font-display">
-              Top Selling Products by Volume
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <Award className="w-4 h-4 text-amber-500" />
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white font-display">
+              {language === 'bn' ? 'সর্বাধিক বিক্রিত পণ্য তালিকা' : 'Top Selling Products'}
             </h3>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {topSelling.length === 0 ? (
-              <p className="text-center py-6 text-xs text-[#A09CA8]">No items sold yet.</p>
+              <p className="text-center py-8 text-xs text-slate-500">
+                {language === 'bn' ? 'এখনও কোনো পণ্য বিক্রয় হয়নি।' : 'No products sold yet.'}
+              </p>
             ) : (
               topSelling.map((prod, idx) => (
-                <div key={idx} className="space-y-1">
+                <div key={idx} className="space-y-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="font-bold text-white">
+                    <span className="font-semibold text-slate-900 dark:text-white">
                       #{idx + 1} {prod.name}
                     </span>
-                    <span className="font-mono text-[#FFA000] font-bold">
-                      {prod.qty} units • ₹{prod.revenue.toFixed(0)}
+                    <span className="font-mono text-slate-700 dark:text-slate-300 font-bold">
+                      {prod.qty} {language === 'bn' ? 'পিস' : 'units'} • ₹{prod.revenue.toFixed(0)}
                     </span>
                   </div>
-                  <div className="w-full h-2 rounded-full bg-[#100C14] overflow-hidden">
+                  <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                     <div
-                      className="h-full btn-primary-gradient rounded-full"
+                      className="h-full bg-blue-600 rounded-full"
                       style={{
                         width: `${Math.min(100, (prod.qty / (topSelling[0]?.qty || 1)) * 100)}%`,
                       }}
@@ -126,45 +137,45 @@ export function ReportsPage() {
         </div>
 
         {/* Payment Methods Split */}
-        <div className="p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-xl space-y-4">
-          <div className="flex items-center gap-2 pb-2 border-b border-white/10">
-            <QrCode className="w-4 h-4 text-[#FF4A6B]" />
-            <h3 className="font-bold text-sm text-white font-display">
-              Payment Method Breakdown
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <QrCode className="w-4 h-4 text-blue-600" />
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white font-display">
+              {language === 'bn' ? 'পেমেন্ট মাধ্যমের বিবরণ' : 'Payment Methods Breakdown'}
             </h3>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="p-3.5 rounded-2xl bg-[#100C14] border border-white/10">
-              <span className="text-[11px] text-[#A09CA8] block">UPI QR Payments</span>
-              <span className="text-lg font-black text-[#FFA000] font-display">
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+              <span className="text-xs text-slate-500 block">UPI QR Payments</span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
                 ₹{paymentBreakdown.UPI.toFixed(2)}
               </span>
-              <span className="text-[10px] text-[#A09CA8] block mt-0.5">Google Pay / PhonePe / Paytm</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5">GPay / PhonePe / Paytm</span>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#100C14] border border-white/10">
-              <span className="text-[11px] text-[#A09CA8] block">Cash Register</span>
-              <span className="text-lg font-black text-white font-display">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+              <span className="text-xs text-slate-500 block">{language === 'bn' ? 'নগদ ক্যাশ' : 'Cash'}</span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
                 ₹{paymentBreakdown.CASH.toFixed(2)}
               </span>
-              <span className="text-[10px] text-[#A09CA8] block mt-0.5">Physical currency</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5">Physical currency</span>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#100C14] border border-white/10">
-              <span className="text-[11px] text-[#A09CA8] block">Card Swipes</span>
-              <span className="text-lg font-black text-white font-display">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+              <span className="text-xs text-slate-500 block">Card Swipes</span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
                 ₹{paymentBreakdown.CARD.toFixed(2)}
               </span>
-              <span className="text-[10px] text-[#A09CA8] block mt-0.5">Debit / Credit POS</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5">POS Card terminal</span>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-[#100C14] border border-white/10">
-              <span className="text-[11px] text-[#A09CA8] block">Bank Transfer</span>
-              <span className="text-lg font-black text-white font-display">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
+              <span className="text-xs text-slate-500 block">Bank Transfer</span>
+              <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">
                 ₹{paymentBreakdown.BANK_TRANSFER.toFixed(2)}
               </span>
-              <span className="text-[10px] text-[#A09CA8] block mt-0.5">NEFT / IMPS</span>
+              <span className="text-[10px] text-slate-400 block mt-0.5">NEFT / IMPS</span>
             </div>
           </div>
         </div>

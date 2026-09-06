@@ -10,7 +10,6 @@ import {
   Edit3, 
   Trash2, 
   X, 
-  Check, 
   History,
   ShoppingCart
 } from 'lucide-react';
@@ -18,7 +17,7 @@ import { useApp } from '../contexts/AppContext';
 import { Customer } from '../types';
 
 export function CustomersPage() {
-  const { customers, addCustomer, updateCustomer, deleteCustomer, bills, setActiveCustomer, setCurrentView } = useApp();
+  const { customers, addCustomer, updateCustomer, deleteCustomer, bills, setActiveCustomer, setCurrentView, language } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -88,56 +87,58 @@ export function CustomersPage() {
     : [];
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 select-none pb-24 lg:pb-8">
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-5 select-none pb-24 lg:pb-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold font-display text-white">
-            Customer Directory & CRM
+          <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white">
+            {language === 'bn' ? 'গ্রাহক খাতা ও যোগাযোগ' : 'Customer Directory'}
           </h2>
-          <p className="text-xs text-[#A09CA8]">
-            Track purchase totals, billing frequencies, and contact details ({customers.length} customers)
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {language === 'bn'
+              ? `নিয়মিত খরিদ্দারদের মোট কেনাকাটা ও বিলের ইতিহাস (${customers.length} জন গ্রাহক)`
+              : `Track customer purchases, history and billing details (${customers.length} customers)`}
           </p>
         </div>
 
         <button
           type="button"
           onClick={handleOpenAdd}
-          className="px-4 py-2.5 rounded-2xl btn-primary-gradient text-white font-extrabold text-xs shadow-md transition-all flex items-center gap-1.5 self-start sm:self-auto"
+          className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center gap-1.5 self-start sm:self-auto"
         >
           <UserPlus className="w-4 h-4" />
-          <span>Add New Customer</span>
+          <span>{language === 'bn' ? 'নতুন গ্রাহক যোগ' : 'Add Customer'}</span>
         </button>
       </div>
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF4A6B]" />
+        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search by customer name or phone..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#140F18] border border-white/10 text-xs text-white placeholder-[#A09CA8]/60 focus:outline-none"
+          placeholder={language === 'bn' ? 'গ্রাহকের নাম বা ফোন নম্বর দিয়ে খুঁজুন...' : 'Search by customer name or phone...'}
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
         />
       </div>
 
-      {/* Customers List Grid */}
+      {/* Customers Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((c) => (
           <div
             key={c.id}
-            className="p-5 rounded-3xl bg-[#140F18] border border-white/10 hover:border-[#FF1E42]/50 transition-all flex flex-col justify-between space-y-4"
+            className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 transition-colors flex flex-col justify-between space-y-4 shadow-2xs"
           >
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-2xl bg-[#1F1422] border border-white/10 flex items-center justify-center font-bold text-sm text-[#FFA000]">
-                    {c.name[0]}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center font-bold text-sm">
+                    {c.name[0]?.toUpperCase() || 'C'}
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-white truncate">{c.name}</h3>
-                    <p className="text-[11px] text-[#A09CA8] font-mono">{c.phone}</p>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate">{c.name}</h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{c.phone}</p>
                   </div>
                 </div>
 
@@ -145,7 +146,8 @@ export function CustomersPage() {
                   <button
                     type="button"
                     onClick={() => handleOpenEdit(c)}
-                    className="p-1.5 rounded-lg bg-[#1F1422] text-[#FFA000] hover:bg-[#FF1E42]/20"
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/30 transition-colors"
+                    title={language === 'bn' ? 'এডিট করুন' : 'Edit'}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
@@ -153,7 +155,8 @@ export function CustomersPage() {
                     <button
                       type="button"
                       onClick={() => deleteCustomer(c.id)}
-                      className="p-1.5 rounded-lg bg-[#1F1422] text-[#A09CA8] hover:text-red-400"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                      title={language === 'bn' ? 'মুছে ফেলুন' : 'Delete'}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -162,25 +165,25 @@ export function CustomersPage() {
               </div>
 
               {c.address && (
-                <p className="text-[11px] text-[#A09CA8] flex items-center gap-1 truncate">
-                  <MapPin className="w-3 h-3 text-[#FF4A6B] shrink-0" />
+                <p className="text-xs text-slate-500 flex items-center gap-1.5 truncate">
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                   <span>{c.address}</span>
                 </p>
               )}
             </div>
 
             {/* Stats Row */}
-            <div className="grid grid-cols-2 gap-2 p-2.5 rounded-2xl bg-[#100C14] border border-white/10 text-xs">
+            <div className="grid grid-cols-2 gap-2 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
               <div>
-                <span className="text-[10px] text-[#A09CA8] block">Total Spent</span>
-                <span className="font-extrabold text-[#FFA000] font-mono text-sm">
+                <span className="text-[10px] text-slate-500 uppercase font-semibold block">{language === 'bn' ? 'মোট কেনাকাটা' : 'Total Spent'}</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono text-sm">
                   ₹{c.totalPurchases.toFixed(2)}
                 </span>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-[#A09CA8] block">Bills Generated</span>
-                <span className="font-bold text-white font-mono">
-                  {c.billsCount} bills
+                <span className="text-[10px] text-slate-500 uppercase font-semibold block">{language === 'bn' ? 'মোট বিল' : 'Bills'}</span>
+                <span className="font-bold text-slate-900 dark:text-white font-mono text-sm">
+                  {c.billsCount} {language === 'bn' ? 'টি' : ''}
                 </span>
               </div>
             </div>
@@ -190,19 +193,19 @@ export function CustomersPage() {
               <button
                 type="button"
                 onClick={() => setSelectedCustomer(c)}
-                className="flex-1 py-2 rounded-xl bg-[#1F1422] hover:bg-[#FF1E42]/20 text-xs font-semibold text-[#A09CA8] hover:text-white transition-colors flex items-center justify-center gap-1.5"
+                className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-xs font-semibold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-center gap-1.5"
               >
-                <History className="w-3.5 h-3.5" />
-                <span>History</span>
+                <History className="w-3.5 h-3.5 text-blue-600" />
+                <span>{language === 'bn' ? 'হিস্ট্রি' : 'History'}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleCreateBillForCustomer(c)}
-                className="flex-1 py-2 rounded-xl btn-primary-gradient text-white text-xs font-bold transition-colors flex items-center justify-center gap-1.5"
+                className="flex-1 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
               >
                 <ShoppingCart className="w-3.5 h-3.5" />
-                <span>Bill Customer</span>
+                <span>{language === 'bn' ? 'বিল করুন' : 'New Bill'}</span>
               </button>
             </div>
           </div>
@@ -211,47 +214,49 @@ export function CustomersPage() {
 
       {/* CUSTOMER HISTORY MODAL */}
       {selectedCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg bg-[#140F18] border border-white/10 rounded-3xl p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <h3 className="font-bold text-sm text-white font-display">
-                  {selectedCustomer.name}'s Purchase History
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white font-display">
+                  {selectedCustomer.name} - {language === 'bn' ? 'বিলের ইতিহাস' : 'Bill History'}
                 </h3>
-                <p className="text-[11px] text-[#A09CA8]">Phone: {selectedCustomer.phone}</p>
+                <p className="text-xs text-slate-500">ফোন: {selectedCustomer.phone}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedCustomer(null)}
-                className="text-[#A09CA8] hover:text-white"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="max-h-72 overflow-y-auto space-y-2.5 pr-1">
+            <div className="max-h-72 overflow-y-auto space-y-2.5 pr-1 divide-y divide-slate-100 dark:divide-slate-800">
               {customerBills.length === 0 ? (
-                <p className="text-center py-8 text-xs text-[#A09CA8]">
-                  No past bills found for this customer.
+                <p className="text-center py-8 text-xs text-slate-500">
+                  {language === 'bn' ? 'এই গ্রাহকের কোনো অতীত বিল পাওয়া যায়নি।' : 'No past bills found for this customer.'}
                 </p>
               ) : (
                 customerBills.map((b) => (
                   <div
                     key={b.id}
-                    className="p-3 rounded-2xl bg-[#100C14] border border-white/10 flex items-center justify-between text-xs"
+                    className="pt-2.5 first:pt-0 flex items-center justify-between text-xs"
                   >
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-white">{b.billNumber}</span>
-                        <span className="text-[10px] text-[#FFA000]">{b.paymentMethod}</span>
+                        <span className="font-mono font-bold text-slate-900 dark:text-white">{b.billNumber}</span>
+                        <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-1.5 py-0.5 rounded">
+                          {b.paymentMethod}
+                        </span>
                       </div>
-                      <p className="text-[10px] text-[#A09CA8] mt-0.5">{b.date} at {b.time}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{b.date} • {b.time}</p>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono font-bold text-sm text-[#FFA000]">
+                      <span className="font-mono font-bold text-sm text-slate-900 dark:text-white">
                         ₹{b.grandTotal.toFixed(2)}
                       </span>
-                      <span className="text-[9px] text-[#FF4A6B] block">Paid</span>
+                      <span className="text-[10px] text-emerald-600 font-semibold block">পরিশোধিত</span>
                     </div>
                   </div>
                 ))
@@ -266,9 +271,9 @@ export function CustomersPage() {
                   setSelectedCustomer(null);
                   handleCreateBillForCustomer(cust);
                 }}
-                className="w-full py-2.5 rounded-xl btn-primary-gradient text-white font-bold text-xs"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs"
               >
-                Create New Bill For This Customer
+                {language === 'bn' ? 'এই গ্রাহকের নামে নতুন বিল তৈরি করুন' : 'Create New Bill For This Customer'}
               </button>
             </div>
           </div>
@@ -277,77 +282,87 @@ export function CustomersPage() {
 
       {/* ADD / EDIT CUSTOMER MODAL */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-xs p-4">
-          <div className="w-full max-w-sm bg-[#140F18] border border-white/10 rounded-3xl p-5 space-y-3.5 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <h3 className="font-bold text-sm text-white">
-                {editingId ? 'Edit Customer' : 'Add New Customer'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3.5 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                {editingId 
+                  ? (language === 'bn' ? 'গ্রাহকের তথ্য সংশোধন' : 'Edit Customer') 
+                  : (language === 'bn' ? 'নতুন গ্রাহক নিবন্ধন' : 'Add Customer')}
               </h3>
-              <button type="button" onClick={() => setShowModal(false)} className="text-[#A09CA8]">
+              <button type="button" onClick={() => setShowModal(false)} className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSave} className="space-y-3 text-xs">
               <div>
-                <label className="block text-[11px] text-[#A09CA8] mb-1">Customer Name *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'গ্রাহকের নাম *' : 'Name *'}
+                </label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Ramesh Patel"
-                  className="w-full px-3 py-2 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                  placeholder="যেমন: অনিল সাহা"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] text-[#A09CA8] mb-1">Mobile Number *</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'মোবাইল নম্বর *' : 'Mobile *'}
+                </label>
                 <input
                   type="tel"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98200 11223"
-                  className="w-full px-3 py-2 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                  placeholder="+91 98300 12345"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] text-[#A09CA8] mb-1">Email (Optional)</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'ইমেইল (ঐচ্ছিক)' : 'Email (Optional)'}
+                </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="customer@email.com"
-                  className="w-full px-3 py-2 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] text-[#A09CA8] mb-1">Address (Optional)</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'ঠিকানা (ঐচ্ছিক)' : 'Address (Optional)'}
+                </label>
                 <input
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Flat #, Locality, City"
-                  className="w-full px-3 py-2 rounded-xl bg-[#100C14] border border-white/15 text-xs text-white focus:outline-none"
+                  placeholder="গ্রাম / পাড়া, শহর"
+                  className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
                 />
               </div>
 
               <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl btn-primary-gradient text-white font-bold text-xs"
+                  className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs"
                 >
-                  Save Customer
+                  {language === 'bn' ? 'সংরক্ষণ করুন' : 'Save Customer'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2.5 rounded-xl bg-[#1F1422] text-[#A09CA8] text-xs"
+                  className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold"
                 >
-                  Cancel
+                  {language === 'bn' ? 'বাতিল' : 'Cancel'}
                 </button>
               </div>
             </form>

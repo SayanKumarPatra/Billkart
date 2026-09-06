@@ -1,157 +1,326 @@
 import { useState } from 'react';
 import { 
-  Home, 
-  FileText, 
+  LayoutDashboard, 
+  ShoppingCart, 
   Barcode, 
   Package, 
-  MoreHorizontal, 
+  Menu, 
+  X, 
   Users, 
+  FileText, 
   BarChart3, 
   Settings, 
-  HelpCircle,
-  PlusCircle
+  HelpCircle, 
+  Globe, 
+  Sun, 
+  Moon, 
+  Monitor, 
+  RotateCcw,
+  LogOut,
+  Compass
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { AppView } from '../../types';
+import { playSound } from '../../utils/audioHelper';
 
 export function MobileBottomNav() {
-  const { currentView, setCurrentView, openScanner, cartItems } = useApp();
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const { 
+    currentView, 
+    setCurrentView, 
+    openScanner, 
+    cartItems, 
+    language, 
+    setLanguage, 
+    themeMode, 
+    setThemeMode,
+    business,
+    logout
+  } = useApp();
 
-  const navItems = [
-    { id: 'dashboard' as AppView, label: 'Home', icon: Home },
-    { id: 'bills' as AppView, label: 'Bills', icon: FileText },
-    // Center Action: Scan
-    { id: 'scan' as any, label: 'Scan', icon: Barcode, isCenterAction: true },
-    { id: 'products' as AppView, label: 'Products', icon: Package },
-    { id: 'more' as any, label: 'More', icon: MoreHorizontal, isMenu: true },
-  ];
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleNav = (view: AppView) => {
+    playSound('click');
+    setCurrentView(view);
+    setIsMenuOpen(false);
+  };
+
+  const handleScanClick = () => {
+    playSound('scan');
+    openScanner();
+    setIsMenuOpen(false);
+  };
+
+  const toggleLanguage = () => {
+    playSound('click');
+    setLanguage(language === 'bn' ? 'en' : 'bn');
+  };
+
+  const toggleTheme = () => {
+    const next = themeMode === 'light' ? 'dark' : themeMode === 'dark' ? 'system' : 'light';
+    setThemeMode(next);
+    playSound('click');
+  };
+
+  const restartFlow = () => {
+    playSound('click');
+    try {
+      sessionStorage.removeItem('billkart_session_started');
+    } catch (e) { /* ignore */ }
+    setIsMenuOpen(false);
+    setCurrentView('splash');
+  };
 
   return (
     <>
-      {/* Pop-up sheet for 'More' menu on mobile */}
-      {showMoreMenu && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/80 backdrop-blur-xs lg:hidden"
-          onClick={() => setShowMoreMenu(false)}
-        >
+      {/* Expanded Menu Drawer (Modal Sheet) */}
+      {isMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
+          {/* Backdrop */}
           <div 
-            className="absolute bottom-16 inset-x-3 p-4 bg-[#140F18] border border-white/10 rounded-3xl shadow-2xl space-y-2 select-none"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <span className="text-xs font-bold text-[#FFA000] uppercase tracking-wider">More BillKart Features</span>
-              <span className="text-[10px] text-[#A09CA8]">v2.6 POS</span>
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            onClick={() => setIsMenuOpen(false)}
+          />
+
+          {/* Drawer Sheet */}
+          <div className="relative bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  {business.shopName || 'BillKart POS'}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  {business.ownerName || 'দোকানদার'} • {language === 'bn' ? 'মেনু ও সেটিংস' : 'Menu & Tools'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <button
-              type="button"
-              onClick={() => { setCurrentView('create-bill'); setShowMoreMenu(false); }}
-              className="w-full flex items-center justify-between p-3 rounded-2xl bg-[#1F1422] border border-white/10 text-xs font-bold text-white"
-            >
-              <div className="flex items-center gap-2.5">
-                <PlusCircle className="w-4 h-4 text-[#FF1E42]" />
-                <span>Create New Bill</span>
-              </div>
-              {cartItems.length > 0 && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#FFA000] text-black font-bold">
-                  {cartItems.length} in cart
+            {/* Quick Actions Grid */}
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleNav('customers')}
+                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left border border-slate-200/80 dark:border-slate-800 transition-colors"
+              >
+                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+                    {language === 'bn' ? 'কাস্টমার খতিয়ান' : 'Customers'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">
+                    {language === 'bn' ? 'বাকি ও কাস্টমার তালিকা' : 'Directory & dues'}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleNav('bills')}
+                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left border border-slate-200/80 dark:border-slate-800 transition-colors"
+              >
+                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+                    {language === 'bn' ? 'সকল ইনভয়েস' : 'All Bills'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">
+                    {language === 'bn' ? 'ইতিহাস ও প্রিন্ট' : 'History & reprint'}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleNav('reports')}
+                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left border border-slate-200/80 dark:border-slate-800 transition-colors"
+              >
+                <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+                    {language === 'bn' ? 'বিক্রয় রিপোর্ট' : 'Reports'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">
+                    {language === 'bn' ? 'দৈনিক হিসাব ও লাভ' : 'Sales & insights'}
+                  </span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleNav('settings')}
+                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left border border-slate-200/80 dark:border-slate-800 transition-colors"
+              >
+                <Settings className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
+                    {language === 'bn' ? 'দোকান সেটিংস' : 'Settings'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 block truncate">
+                    {language === 'bn' ? 'ইউপিআই ও প্রোফাইল' : 'UPI & printer'}
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            {/* Quick Toggle Controls */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40">
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {language === 'bn' ? 'ভাষা নির্বাচন' : 'Language'}
                 </span>
-              )}
-            </button>
+                <button
+                  type="button"
+                  onClick={toggleLanguage}
+                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-blue-600 dark:text-blue-400"
+                >
+                  {language === 'bn' ? 'বাংলা (বাং)' : 'English (EN)'}
+                </button>
+              </div>
 
-            <button
-              type="button"
-              onClick={() => { setCurrentView('customers'); setShowMoreMenu(false); }}
-              className="w-full flex items-center gap-2.5 p-3 rounded-2xl bg-[#1F1422] border border-white/10 text-xs font-medium text-white"
-            >
-              <Users className="w-4 h-4 text-[#FF4A6B]" />
-              <span>Customers CRM</span>
-            </button>
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40">
+                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  {language === 'bn' ? 'থিম ডিসপ্লে' : 'Theme Mode'}
+                </span>
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
+                >
+                  {themeMode === 'light' ? <Sun className="w-3.5 h-3.5 text-amber-500" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />}
+                  <span className="capitalize">{themeMode}</span>
+                </button>
+              </div>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => { setCurrentView('reports'); setShowMoreMenu(false); }}
-              className="w-full flex items-center gap-2.5 p-3 rounded-2xl bg-[#1F1422] border border-white/10 text-xs font-medium text-white"
-            >
-              <BarChart3 className="w-4 h-4 text-[#FF4A6B]" />
-              <span>Sales Reports & Analytics</span>
-            </button>
+            {/* Tour & Logout */}
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={restartFlow}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5"
+              >
+                <Compass className="w-4 h-4 text-blue-600" />
+                <span>{language === 'bn' ? 'গাইড ও টিউটোরিয়াল' : 'Tutorial Guide'}</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={() => { setCurrentView('settings'); setShowMoreMenu(false); }}
-              className="w-full flex items-center gap-2.5 p-3 rounded-2xl bg-[#1F1422] border border-white/10 text-xs font-medium text-white"
-            >
-              <Settings className="w-4 h-4 text-[#FF4A6B]" />
-              <span>Business Settings & UPI</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => { setCurrentView('help'); setShowMoreMenu(false); }}
-              className="w-full flex items-center gap-2.5 p-3 rounded-2xl bg-[#1F1422] border border-white/10 text-xs font-medium text-white"
-            >
-              <HelpCircle className="w-4 h-4 text-[#FF4A6B]" />
-              <span>Help & Support</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  logout();
+                }}
+                className="py-2.5 px-4 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 text-xs font-semibold flex items-center gap-1.5"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>{language === 'bn' ? 'লগ আউট' : 'Logout'}</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Main Bottom Bar */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#100C14]/95 backdrop-blur-lg border-t border-white/10 py-2 px-3 safe-area-pb select-none shadow-[0_-4px_25px_rgba(0,0,0,0.6)]">
-        <div className="flex items-center justify-around">
-          {navItems.map((item) => {
-            const Icon = item.icon;
+      {/* Modern, Rock-Solid Bottom Navigation Bar */}
+      <nav 
+        id="mobile-bottom-nav"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 safe-area-pb transition-colors shadow-lg"
+      >
+        <div className="flex items-center justify-around px-1 py-1.5 max-w-md mx-auto">
+          {/* 1. Dashboard */}
+          <button
+            type="button"
+            id="mobile-nav-dashboard"
+            onClick={() => handleNav('dashboard')}
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors min-h-[46px] ${
+              currentView === 'dashboard'
+                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <LayoutDashboard className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] leading-tight truncate w-full text-center">
+              {language === 'bn' ? 'ড্যাশবোর্ড' : 'Home'}
+            </span>
+          </button>
 
-            if (item.isCenterAction) {
-              return (
-                <button
-                  key="center-scan"
-                  type="button"
-                  id="mobile-nav-scan-btn"
-                  onClick={() => openScanner()}
-                  className="relative -top-4 flex flex-col items-center group"
-                >
-                  <div className="w-13 h-13 rounded-2xl btn-primary-gradient p-0.5 shadow-[0_6px_20px_rgba(255,30,66,0.5)] active:scale-95 transition-transform">
-                    <div className="w-full h-full bg-[#100C14] rounded-[14px] flex items-center justify-center group-hover:bg-[#1C121D] transition-colors">
-                      <Barcode className="w-6 h-6 text-[#FFA000]" />
-                    </div>
-                  </div>
-                  <span className="text-[10px] font-bold text-[#FFA000] mt-0.5">Scan</span>
-                </button>
-              );
-            }
-
-            const isActive = currentView === item.id;
-
-            return (
-              <button
-                key={item.label}
-                type="button"
-                id={`mobile-nav-${item.label.toLowerCase()}`}
-                onClick={() => {
-                  if (item.isMenu) {
-                    setShowMoreMenu(!showMoreMenu);
-                  } else {
-                    setShowMoreMenu(false);
-                    setCurrentView(item.id as AppView);
-                  }
-                }}
-                className={`flex flex-col items-center py-1 px-3 rounded-xl transition-all ${
-                  isActive ? 'text-[#FFA000]' : 'text-[#A09CA8] hover:text-white'
-                }`}
-              >
-                <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
-                <span className={`text-[10px] mt-1 font-medium ${isActive ? 'font-bold' : ''}`}>
-                  {item.label}
+          {/* 2. Create Bill / Cart */}
+          <button
+            type="button"
+            id="mobile-nav-create-bill"
+            onClick={() => handleNav('create-bill')}
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors relative min-h-[46px] ${
+              currentView === 'create-bill'
+                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <div className="relative">
+              <ShoppingCart className="w-5 h-5 mb-0.5" />
+              {cartItems.length > 0 && (
+                <span className="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-blue-600 text-white">
+                  {cartItems.length}
                 </span>
-              </button>
-            );
-          })}
+              )}
+            </div>
+            <span className="text-[10px] leading-tight truncate w-full text-center">
+              {language === 'bn' ? 'বিল তৈরি' : 'Billing'}
+            </span>
+          </button>
+
+          {/* 3. Central Barcode Scanner */}
+          <div className="flex-1 flex justify-center -mt-3">
+            <button
+              type="button"
+              id="mobile-nav-scanner"
+              onClick={handleScanClick}
+              className="w-12 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex flex-col items-center justify-center shadow-md transition-all"
+              title="Scan Barcode"
+            >
+              <Barcode className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* 4. Products */}
+          <button
+            type="button"
+            id="mobile-nav-products"
+            onClick={() => handleNav('products')}
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors min-h-[46px] ${
+              currentView === 'products'
+                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Package className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] leading-tight truncate w-full text-center">
+              {language === 'bn' ? 'পণ্য স্টক' : 'Items'}
+            </span>
+          </button>
+
+          {/* 5. More Menu */}
+          <button
+            type="button"
+            id="mobile-nav-menu"
+            onClick={() => setIsMenuOpen(true)}
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors min-h-[46px] ${
+              isMenuOpen
+                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+            }`}
+          >
+            <Menu className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] leading-tight truncate w-full text-center">
+              {language === 'bn' ? 'মেনু' : 'Menu'}
+            </span>
+          </button>
         </div>
-      </div>
+      </nav>
     </>
   );
 }

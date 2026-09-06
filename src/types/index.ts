@@ -59,22 +59,51 @@ export interface Bill {
 
 export interface BusinessProfile {
   shopName: string;
+  tagline?: string;
   ownerName: string;
   phone: string;
+  secondaryPhone?: string;
   email: string;
   address: string;
+  landmark?: string;
+  city?: string;
+  district?: string;
+  state?: string;
+  pinCode?: string;
   category: string;
+  establishedYear?: string;
+  logoUrl?: string;
+  
+  // Tax & Legal Licenses
   gstNumber?: string;
+  panNumber?: string;
+  tradeLicenseNumber?: string;
+  fssaiNumber?: string;
+  drugLicenseNumber?: string;
+  msmeNumber?: string;
+
+  // Digital Payments & Banking
   upiId: string;
+  upiPayeeName?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankIfsc?: string;
+
+  // Invoice & Receipt Customization
   currency: string;
   invoicePrefix: string;
-  logoUrl?: string;
+  receiptFooterText?: string;
+  termsAndConditions?: string;
+  printerType?: '58mm' | '80mm' | 'a4';
+  showQrOnBill?: boolean;
 }
 
 export interface UserAccount {
   id: string;
   name: string;
   email: string;
+  phone?: string;
+  storeName?: string;
   isAuthenticated: boolean;
   hasCompletedSetup: boolean;
   hasCompletedOnboarding: boolean;
@@ -89,8 +118,12 @@ export interface NotificationItem {
   read: boolean;
 }
 
+export type Language = 'en' | 'bn';
+export type ThemeMode = 'light' | 'dark' | 'system';
+
 export type AppView = 
   | 'splash'
+  | 'language-select'
   | 'onboarding'
   | 'auth'
   | 'business-setup'

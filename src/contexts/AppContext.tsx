@@ -9,13 +9,17 @@ import {
   NotificationItem, 
   AppView, 
   PaymentMethod, 
-  PaymentStatus 
+  PaymentStatus,
+  Language,
+  ThemeMode
 } from '../types';
+import { translations, Translations } from '../i18n/translations';
 import { 
   INITIAL_BUSINESS, 
   INITIAL_PRODUCTS, 
   INITIAL_CUSTOMERS, 
-  INITIAL_BILLS 
+  INITIAL_BILLS,
+  DEFAULT_CUSTOMER
 } from '../data/initialData';
 
 interface AddToCartResult {
@@ -26,6 +30,12 @@ interface AddToCartResult {
 }
 
 interface AppContextType {
+  language: Language;
+  setLanguage: (lang: Language) => void;
+  themeMode: ThemeMode;
+  resolvedTheme: 'light' | 'dark';
+  setThemeMode: (mode: ThemeMode) => void;
+  t: (key: keyof Translations) => string;
   currentView: AppView;
   setCurrentView: (view: AppView) => void;
   user: UserAccount;
@@ -81,6 +91,7 @@ interface AppContextType {
   exportDataJSON: () => string;
   restoreDataJSON: (jsonString: string) => boolean;
   resetToDefaultData: () => void;
+  logout: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -91,11 +102,100 @@ const STORAGE_KEYS = {
   CUSTOMERS: 'billkart_v2_customers',
   BILLS: 'billkart_v2_bills',
   USER: 'billkart_v2_user',
+  LANGUAGE: 'billkart_v2_language',
+  THEME: 'billkart_v2_theme',
 };
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  // Navigation State
-  const [currentView, setCurrentView] = useState<AppView>('splash');
+  // Theme State - Default to 'light' mode as requested ("প্রথমে যে আসবে মানে ইউজার তাকে প্রথম লাইট মোডেই থাকবে")
+  const [themeMode, setThemeModeState] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.THEME);
+    if (saved === 'light' || saved === 'dark' || saved === 'system') {
+      return saved;
+    }
+    // Default for first-time visitors is strictly Light Mode
+    return 'light';
+  });
+
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+
+  // Synchronize theme to document element class list & data attributes
+  useEffect(() => {
+    const updateEffectiveTheme = () => {
+      let effective: 'light' | 'dark' = 'light';
+      if (themeMode === 'system') {
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        effective = prefersDark ? 'dark' : 'light';
+      } else {
+        effective = themeMode;
+      }
+      setResolvedTheme(effective);
+
+      const root = document.documentElement;
+      if (effective === 'dark') {
+        root.classList.add('dark');
+        root.classList.remove('light');
+        root.setAttribute('data-theme', 'dark');
+      } else {
+        root.classList.add('light');
+        root.classList.remove('dark');
+        root.setAttribute('data-theme', 'light');
+      }
+    };
+
+    updateEffectiveTheme();
+
+    if (themeMode === 'system' && window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handler = () => updateEffectiveTheme();
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    }
+  }, [themeMode]);
+
+  const setThemeMode = (mode: ThemeMode) => {
+    setThemeModeState(mode);
+    localStorage.setItem(STORAGE_KEYS.THEME, mode);
+  };
+
+  // Language State - Default to 'bn' (Bengali) as requested or stored preference
+  const [language, setLanguageState] = useState<Language>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
+    if (saved === 'en' || saved === 'bn') {
+      return saved;
+    }
+    return 'bn';
+  });
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem(STORAGE_KEYS.LANGUAGE, lang);
+  };
+
+  // Translation lookup helper
+  const t = (key: keyof Translations): string => {
+    return translations[language]?.[key] || translations.en[key] || '';
+  };
+
+  // Navigation State - Full requested onboarding flow:
+  // Splash (প্রি-লোডিং) -> Guide (অনবোর্ডিং গাইড) -> Auth (লগইন/সাইন আপ) -> Business Setup (বিজনেস প্রোফাইল) -> POS Billing
+  const [currentView, setCurrentView] = useState<AppView>(() => {
+    const seenSplashInSession = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('billkart_session_started') : null;
+    if (!seenSplashInSession) {
+      try { sessionStorage.setItem('billkart_session_started', '1'); } catch (e) { /* ignore */ }
+      return 'splash';
+    }
+    try {
+      const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
+      if (savedUser) {
+        const parsed = JSON.parse(savedUser);
+        if (parsed.isAuthenticated && parsed.hasCompletedSetup) {
+          return 'dashboard';
+        }
+      }
+    } catch (e) { /* ignore */ }
+    return 'splash';
+  });
 
   // User State - Initialized fresh to Sayan Kumar Patra
   const [user, setUser] = useState<UserAccount>(() => {
@@ -131,13 +231,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return INITIAL_PRODUCTS;
   });
 
-  // Customers State (starts clean: [])
+  // Customers State (ensures at least 1 customer exists, e.g. Walk-in)
   const [customers, setCustomers] = useState<Customer[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* ignore */ }
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.id) {
+          return parsed;
+        }
+      } catch (e) { /* ignore */ }
     }
-    return INITIAL_CUSTOMERS;
+    return INITIAL_CUSTOMERS.length > 0 ? INITIAL_CUSTOMERS : [DEFAULT_CUSTOMER];
   });
 
   // Bills State (starts clean: [])
@@ -191,7 +296,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [bills]);
 
   // Active Bill / POS Cart
-  const [activeCustomer, setActiveCustomer] = useState<Customer>(INITIAL_CUSTOMERS[0]);
+  const [activeCustomer, setActiveCustomer] = useState<Customer>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.id) {
+          return parsed[0];
+        }
+      } catch (e) { /* ignore */ }
+    }
+    return INITIAL_CUSTOMERS[0] || DEFAULT_CUSTOMER;
+  });
   const [cartItems, setCartItems] = useState<BillItem[]>([
     {
       id: 'cart-1',
@@ -273,7 +389,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteCustomer = (id: string) => {
-    setCustomers(prev => prev.filter(c => c.id !== id));
+    setCustomers(prev => {
+      const remaining = prev.filter(c => c.id !== id);
+      return remaining.length > 0 ? remaining : [DEFAULT_CUSTOMER];
+    });
+    setActiveCustomer(prev => (prev?.id === id ? DEFAULT_CUSTOMER : prev));
   };
 
   // Cart Logic with EXACT Barcode Auto-Increment requirement:
@@ -422,14 +542,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const formattedNum = `${business.invoicePrefix || 'BK'}-${String(nextNum).padStart(6, '0')}`;
     const now = new Date();
 
+    const targetCustomer = activeCustomer || customers[0] || DEFAULT_CUSTOMER;
+
     const newBill: Bill = {
       id: 'bill-' + Date.now(),
       billNumber: formattedNum,
       date: now.toISOString().split('T')[0],
       time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      customerId: activeCustomer.id,
-      customerName: activeCustomer.name,
-      customerPhone: activeCustomer.phone,
+      customerId: targetCustomer.id,
+      customerName: targetCustomer.name,
+      customerPhone: targetCustomer.phone,
       items: [...cartItems],
       subtotal: cartSubtotal,
       discountAmount: cartDiscountAmount,
@@ -445,7 +567,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     // Update customer stats
     setCustomers(prev =>
       prev.map(c => {
-        if (c.id === activeCustomer.id) {
+        if (c.id === targetCustomer.id) {
           return {
             ...c,
             totalPurchases: c.totalPurchases + cartGrandTotal,
@@ -556,14 +678,29 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const resetToDefaultData = () => {
     setBusiness(INITIAL_BUSINESS);
     setProducts(INITIAL_PRODUCTS);
-    setCustomers(INITIAL_CUSTOMERS);
+    setCustomers(INITIAL_CUSTOMERS.length > 0 ? INITIAL_CUSTOMERS : [DEFAULT_CUSTOMER]);
+    setActiveCustomer(INITIAL_CUSTOMERS[0] || DEFAULT_CUSTOMER);
     setBills(INITIAL_BILLS);
     clearCart();
+  };
+
+  const logout = () => {
+    setUser(prev => ({
+      ...prev,
+      isAuthenticated: false,
+    }));
+    setCurrentView('auth');
   };
 
   return (
     <AppContext.Provider
       value={{
+        language,
+        setLanguage,
+        themeMode,
+        resolvedTheme,
+        setThemeMode,
+        t,
         currentView,
         setCurrentView,
         user,
@@ -585,7 +722,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         notifications,
         markNotificationRead,
         clearNotifications,
-        activeCustomer,
+        activeCustomer: activeCustomer || customers[0] || DEFAULT_CUSTOMER,
         setActiveCustomer,
         cartItems,
         addToCartByBarcode,
@@ -611,6 +748,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         exportDataJSON,
         restoreDataJSON,
         resetToDefaultData,
+        logout,
       }}
     >
       {children}

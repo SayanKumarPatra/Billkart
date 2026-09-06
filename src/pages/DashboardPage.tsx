@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion } from 'motion/react';
 import { 
   TrendingUp, 
   ReceiptText, 
@@ -8,11 +7,11 @@ import {
   Barcode, 
   PlusCircle, 
   ArrowUpRight, 
-  CheckCircle2, 
   Clock, 
   ChevronRight, 
-  Sparkles,
-  AlertTriangle
+  AlertTriangle,
+  QrCode,
+  Eye
 } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { Bill } from '../types';
@@ -25,11 +24,12 @@ export function DashboardPage() {
     customers, 
     business, 
     setCurrentView, 
-    openScanner 
+    openScanner,
+    language,
+    t
   } = useApp();
 
   const [selectedInvoice, setSelectedInvoice] = useState<Bill | null>(null);
-  const [chartRange, setChartRange] = useState<'day' | 'week' | 'month'>('week');
 
   // Compute live statistics
   const todayStr = new Date().toISOString().split('T')[0];
@@ -38,55 +38,47 @@ export function DashboardPage() {
   const totalRevenue = bills.reduce((acc, b) => acc + b.grandTotal, 0);
   const lowStockCount = products.filter(p => p.stock <= p.minStockAlert).length;
 
-  // Chart data points
-  const weekData = [
-    { label: 'Mon', value: 3420 },
-    { label: 'Tue', value: 4190 },
-    { label: 'Wed', value: 2980 },
-    { label: 'Thu', value: 5820 },
-    { label: 'Fri', value: 6490 },
-    { label: 'Sat', value: 8920 },
-    { label: 'Sun', value: 7450 },
-  ];
-  const maxChartVal = Math.max(...weekData.map(d => d.value));
-
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-6 select-none pb-24 lg:pb-8">
+    <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 select-none pb-24 lg:pb-8">
       {/* Welcome & Quick Store Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 rounded-3xl bg-gradient-to-r from-[#160E18] via-[#24131E] to-[#160E18] border border-white/10 shadow-xl">
+      <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#FF1E42] animate-ping" />
-            <span className="text-[11px] font-bold text-[#FFA000] uppercase tracking-wider">
-              Terminal Live • {business.shopName}
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              {t('posTerminalActive')} • {business.shopName}
             </span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-extrabold font-display text-white">
-            Welcome back, {business.ownerName || 'Sayan Kumar Patra'}
+          <h2 className="text-xl sm:text-2xl font-bold font-display text-slate-900 dark:text-white">
+            {language === 'bn' 
+              ? `স্বাগতম, ${business.ownerName || 'দোকানদার'}` 
+              : `Welcome back, ${business.ownerName || 'Store Owner'}`}
           </h2>
-          <p className="text-xs text-[#A09CA8]">
-            {bills.length} bills generated • Fast barcode scanning and instant UPI QR ready
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {language === 'bn'
+              ? `${bills.length}টি বিল তৈরি হয়েছে • বারকোড স্ক্যানার এবং ইউপিআই পেমেন্ট সক্রিয়`
+              : `${bills.length} bills generated • Barcode scanner & UPI ready`}
           </p>
         </div>
 
-        {/* Primary POS Action */}
-        <div className="flex items-center gap-2.5">
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 sm:flex items-center gap-2.5">
           <button
             type="button"
             onClick={openScanner}
-            className="px-4 py-2.5 rounded-2xl bg-[#1F1422] hover:bg-[#FF1E42]/20 border border-[#FF1E42]/30 text-xs font-bold text-[#FFA000] transition-all flex items-center gap-2"
+            className="py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 transition-colors flex items-center justify-center gap-2"
           >
-            <Barcode className="w-4 h-4" />
-            <span>Scan Product</span>
+            <Barcode className="w-4 h-4 text-blue-600" />
+            <span>{language === 'bn' ? 'স্ক্যান করুন' : 'Scan'}</span>
           </button>
 
           <button
             type="button"
             onClick={() => setCurrentView('create-bill')}
-            className="px-5 py-2.5 rounded-2xl btn-primary-gradient text-white font-extrabold text-xs shadow-lg transition-all flex items-center gap-2"
+            className="py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center justify-center gap-2"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Create New Bill</span>
+            <span>{language === 'bn' ? 'নতুন বিল তৈরি' : 'New Bill'}</span>
           </button>
         </div>
       </div>
@@ -94,223 +86,249 @@ export function DashboardPage() {
       {/* 4 Summary Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Today's Sales */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg relative overflow-hidden">
-          <div className="flex items-center justify-between text-[#FF4A6B] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Today's Sales</span>
-            <div className="w-8 h-8 rounded-xl bg-[#22131F] flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 text-[#FFA000]" />
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              {t('todaySales')}
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-white font-display">
-            ₹{todaySales.toFixed(2)}
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display">
+            ₹{todaySales.toFixed(0)}
           </div>
-          <div className="flex items-center gap-1 text-[11px] text-[#FFA000] mt-1 font-semibold">
+          <div className="flex items-center gap-1 text-xs text-emerald-600 mt-1 font-semibold">
             <ArrowUpRight className="w-3.5 h-3.5" />
-            <span>{bills.length > 0 ? '+18.4% vs yesterday' : 'Ready for first sale'}</span>
+            <span>{bills.length > 0 ? '+18%' : (language === 'bn' ? 'সক্রিয়' : 'Active')}</span>
           </div>
         </div>
 
         {/* Total Bills */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
-          <div className="flex items-center justify-between text-[#FF4A6B] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Total Bills</span>
-            <div className="w-8 h-8 rounded-xl bg-[#22131F] flex items-center justify-center">
-              <ReceiptText className="w-4 h-4 text-[#FF4A6B]" />
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              {t('todayBillsCount')}
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
+              <ReceiptText className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-white font-display">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display">
             {bills.length}
           </div>
-          <div className="text-[11px] text-[#A09CA8] mt-1">
-            {bills.filter(b => b.paymentStatus === 'SUCCESS').length} paid successfully
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {bills.filter(b => b.paymentStatus === 'SUCCESS').length} {language === 'bn' ? 'পরিশোধিত বিল' : 'paid bills'}
           </div>
         </div>
 
         {/* Total Customers */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
-          <div className="flex items-center justify-between text-[#FF4A6B] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Customers</span>
-            <div className="w-8 h-8 rounded-xl bg-[#22131F] flex items-center justify-center">
-              <Users className="w-4 h-4 text-[#FF4A6B]" />
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              {t('totalCustomers')}
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center">
+              <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-white font-display">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display">
             {customers.length}
           </div>
-          <div className="text-[11px] text-[#FFA000] mt-1 font-semibold">
-            {customers.length > 0 ? `${customers.length} registered customers` : '0 registered customers'}
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            {customers.length} {language === 'bn' ? 'নিবন্ধিত গ্রাহক' : 'registered'}
           </div>
         </div>
 
         {/* Total Products & Low Stock */}
-        <div className="p-4 sm:p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-lg">
-          <div className="flex items-center justify-between text-[#FF4A6B] mb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#A09CA8]">Products</span>
-            <div className="w-8 h-8 rounded-xl bg-[#22131F] flex items-center justify-center">
-              <Package className="w-4 h-4 text-[#FFA000]" />
+        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">
+              {t('navProducts')}
+            </span>
+            <div className="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
+              <Package className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-white font-display">
+          <div className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-display">
             {products.length}
           </div>
-          <div className="flex items-center gap-1.5 text-[11px] mt-1">
+          <div className="flex items-center gap-1 text-xs mt-1">
             {lowStockCount > 0 ? (
-              <span className="text-orange-400 font-bold flex items-center gap-1">
-                <AlertTriangle className="w-3 h-3" />
-                {lowStockCount} items low stock
+              <span className="text-amber-600 font-semibold flex items-center gap-1">
+                <AlertTriangle className="w-3.5 h-3.5" />
+                {lowStockCount} {language === 'bn' ? 'কম মজুত' : 'low stock'}
               </span>
             ) : (
-              <span className="text-[#FFA000]">Inventory ready for POS</span>
+              <span className="text-emerald-600 font-medium">{language === 'bn' ? 'পর্যাপ্ত মজুত' : 'In stock'}</span>
             )}
           </div>
         </div>
       </div>
 
-      {/* Main Grid: Revenue Velocity Chart & Recent Bills */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        {/* Left Column: Sales Chart (7 cols) */}
-        <div className="lg:col-span-7 p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
+      {/* Quick Navigation Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs font-semibold">
+        <button
+          type="button"
+          onClick={() => setCurrentView('create-bill')}
+          className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 text-slate-800 dark:text-slate-200 flex flex-col items-center gap-2 transition-colors shadow-2xs"
+        >
+          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
+            <PlusCircle className="w-5 h-5" />
+          </div>
+          <span>{language === 'bn' ? 'নতুন বিল তৈরি' : 'Create Bill'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setCurrentView('products')}
+          className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 text-slate-800 dark:text-slate-200 flex flex-col items-center gap-2 transition-colors shadow-2xs"
+        >
+          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 flex items-center justify-center">
+            <Package className="w-5 h-5" />
+          </div>
+          <span>{language === 'bn' ? 'পণ্য তালিকা' : 'Inventory'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setCurrentView('customers')}
+          className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 text-slate-800 dark:text-slate-200 flex flex-col items-center gap-2 transition-colors shadow-2xs"
+        >
+          <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600 flex items-center justify-center">
+            <Users className="w-5 h-5" />
+          </div>
+          <span>{language === 'bn' ? 'খরিদ্দার খাতা' : 'Customers'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setCurrentView('bills')}
+          className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500/50 text-slate-800 dark:text-slate-200 flex flex-col items-center gap-2 transition-colors shadow-2xs"
+        >
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center">
+            <ReceiptText className="w-5 h-5" />
+          </div>
+          <span>{language === 'bn' ? 'বিল হিস্ট্রি' : 'Bills History'}</span>
+        </button>
+      </div>
+
+      {/* Recent Bills */}
+      <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 flex items-center justify-center">
+              <ReceiptText className="w-4 h-4" />
+            </div>
             <div>
-              <h3 className="text-sm font-bold font-display text-white">
-                Revenue Velocity
+              <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white font-display">
+                {language === 'bn' ? 'সাম্প্রতিক বিল সমূহ' : 'Recent Invoices'}
               </h3>
-              <p className="text-xs text-[#A09CA8]">Sales performance overview</p>
-            </div>
-
-            <div className="flex rounded-xl bg-[#1A121E] p-1 border border-white/10 text-[11px]">
-              {(['day', 'week', 'month'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setChartRange(mode)}
-                  className={`px-2.5 py-1 rounded-lg font-bold capitalize transition-all ${
-                    chartRange === mode
-                      ? 'bg-[#27131F] text-[#FFA000] border border-[#FF1E42]/30'
-                      : 'text-[#A09CA8]'
-                  }`}
-                >
-                  {mode}
-                </button>
-              ))}
             </div>
           </div>
 
-          {/* Clean Custom Bar Visualizer */}
-          <div className="h-56 flex items-end justify-between gap-3 pt-6 pb-2 px-2">
-            {weekData.map((bar, i) => {
-              const heightPercent = Math.round((bar.value / maxChartVal) * 100);
-              const isHighest = bar.value === maxChartVal;
-
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                  <span className="text-[10px] font-mono text-[#A09CA8] opacity-0 group-hover:opacity-100 transition-opacity">
-                    ₹{bar.value}
-                  </span>
-                  <div className="w-full max-w-[36px] bg-[#100C14] rounded-xl overflow-hidden flex flex-col justify-end p-1 h-44">
-                    <motion.div
-                      initial={{ height: 0 }}
-                      animate={{ height: `${heightPercent}%` }}
-                      transition={{ duration: 0.8, delay: i * 0.08 }}
-                      className={`w-full rounded-lg transition-all ${
-                        isHighest
-                          ? 'btn-primary-gradient shadow-[0_0_15px_rgba(255,30,66,0.5)]'
-                          : 'bg-gradient-to-t from-[#27131F] to-[#FF1E42]/60 group-hover:to-[#FF1E42]'
-                      }`}
-                    />
-                  </div>
-                  <span className={`text-[11px] font-bold ${isHighest ? 'text-[#FFA000]' : 'text-[#A09CA8]'}`}>
-                    {bar.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-[#A09CA8]">
-            <span>Average Order Value: <strong className="text-white">₹{bills.length > 0 ? (totalRevenue / bills.length).toFixed(2) : '0.00'}</strong></span>
-            <span className="text-[#FFA000] font-semibold">UPI Acceptance: Active</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setCurrentView('bills')}
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1 transition-colors"
+          >
+            <span>{language === 'bn' ? 'সকল বিল' : 'View All'}</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
 
-        {/* Right Column: Recent Bills List (5 cols) */}
-        <div className="lg:col-span-5 p-5 rounded-3xl bg-[#140F18] border border-white/10 shadow-xl flex flex-col justify-between">
-          <div className="flex items-center justify-between pb-3 border-b border-white/10">
-            <h3 className="text-sm font-bold font-display text-white">
-              Recent Bills ({bills.length})
-            </h3>
-            <button
-              type="button"
-              onClick={() => setCurrentView('bills')}
-              className="text-[11px] font-bold text-[#FFA000] hover:underline flex items-center gap-1"
-            >
-              <span>View All</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          <div className="divide-y divide-white/10 max-h-80 overflow-y-auto pr-1">
-            {bills.length === 0 ? (
-              <div className="py-12 text-center space-y-2">
-                <ReceiptText className="w-8 h-8 text-[#A09CA8]/50 mx-auto" />
-                <p className="text-xs font-semibold text-white">No bills generated yet</p>
-                <p className="text-[11px] text-[#A09CA8]">Create your first bill to record transactions</p>
-              </div>
-            ) : (
-              bills.slice(0, 5).map((bill) => (
-                <div
-                  key={bill.id}
-                  onClick={() => setSelectedInvoice(bill)}
-                  className="py-3 flex items-center justify-between hover:bg-[#1E1422]/60 px-2 rounded-xl cursor-pointer transition-colors"
-                >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-extrabold text-white">
-                        {bill.billNumber}
-                      </span>
-                      <span
-                        className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
-                          bill.paymentStatus === 'SUCCESS'
-                            ? 'bg-[#FF1E42]/20 text-[#FF4A6B]'
-                            : 'bg-orange-500/20 text-orange-400'
-                        }`}
-                      >
-                        {bill.paymentMethod}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-[#A09CA8] mt-0.5">
-                      {bill.customerName} • {bill.time}
-                    </p>
-                  </div>
-
-                  <div className="text-right">
-                    <div className="text-xs font-black text-[#FFA000] font-mono">
-                      ₹{bill.grandTotal.toFixed(2)}
-                    </div>
-                    <span className="text-[10px] text-[#FF4A6B] flex items-center justify-end gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      <span>Paid</span>
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="pt-3 border-t border-white/10">
+        {/* Bills List */}
+        {bills.length === 0 ? (
+          <div className="py-10 text-center space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+              <ReceiptText className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                {language === 'bn' ? 'এখনও কোনো বিল তৈরি করা হয়নি' : 'No invoices generated yet'}
+              </p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {language === 'bn' ? 'নতুন বিল বাটনে ক্লিক করে প্রথম ক্যাশ মেমো বানান' : 'Click new bill to make your first memo'}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setCurrentView('create-bill')}
-              className="w-full py-2.5 rounded-xl bg-[#1F1422] hover:bg-[#FF1E42]/20 text-xs font-bold text-white hover:text-[#FFA000] border border-[#FF1E42]/30 transition-colors flex items-center justify-center gap-2"
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold inline-flex items-center gap-2 shadow-2xs"
             >
-              <PlusCircle className="w-4 h-4 text-[#FFA000]" />
-              <span>Create Bill For Customer</span>
+              <PlusCircle className="w-4 h-4" />
+              <span>{language === 'bn' ? 'প্রথম বিল তৈরি করুন' : 'Create First Bill'}</span>
             </button>
           </div>
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {bills.slice(0, 6).map((bill) => (
+              <div
+                key={bill.id}
+                onClick={() => setSelectedInvoice(bill)}
+                className="py-3 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/50 px-2 rounded-xl transition-colors cursor-pointer"
+              >
+                <div className="space-y-0.5 min-w-0 flex-1 pr-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-slate-900 dark:text-white">
+                      {bill.billNumber}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${
+                        bill.paymentMethod === 'UPI'
+                          ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400'
+                          : bill.paymentMethod === 'CARD'
+                          ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600'
+                          : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600'
+                      }`}
+                    >
+                      {bill.paymentMethod}
+                    </span>
+                  </div>
+                  <p className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate">
+                    {bill.customerName}
+                  </p>
+                  <p className="text-[11px] text-slate-400 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    <span>{bill.date} • {bill.time} • {bill.items.length} {language === 'bn' ? 'পণ্য' : 'items'}</span>
+                  </p>
+                </div>
+
+                <div className="text-right shrink-0">
+                  <div className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                    ₹{bill.grandTotal.toFixed(2)}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedInvoice(bill);
+                    }}
+                    className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 justify-end"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>{language === 'bn' ? 'বিল দেখুন' : 'View'}</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Bottom Total Summary */}
+        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+          <span>
+            {language === 'bn' ? 'মোট লেনদেন:' : 'Total Sales:'}{' '}
+            <strong className="text-slate-900 dark:text-white font-mono">₹{totalRevenue.toFixed(2)}</strong>
+          </span>
+          <span className="text-emerald-600 font-semibold flex items-center gap-1">
+            <QrCode className="w-3.5 h-3.5" />
+            <span>UPI QR Ready</span>
+          </span>
         </div>
       </div>
 
-      {/* Invoice Modal for clicked bills */}
+      {/* Invoice Modal */}
       {selectedInvoice && (
         <InvoiceModal
           bill={selectedInvoice}

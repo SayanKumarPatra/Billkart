@@ -1,293 +1,591 @@
-import { useState, type FormEvent } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Lock, LogIn, UserPlus, Phone, KeyRound, ShieldCheck, ArrowRight, RotateCcw } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { 
+  Lock, 
+  LogIn, 
+  UserPlus, 
+  Phone, 
+  Store, 
+  User, 
+  ShieldCheck, 
+  ArrowRight, 
+  CheckCircle2, 
+  Globe,
+  Eye, 
+  EyeOff, 
+  Zap
+} from 'lucide-react';
 import { BillKartLogo } from '../components/BillKartLogo';
 import { useApp } from '../contexts/AppContext';
+import { playSound } from '../utils/audioHelper';
+
+type AuthTab = 'login' | 'signup';
+type LoginMode = 'otp' | 'password';
+
+const STORE_CATEGORIES = [
+  { id: 'grocery', bn: 'মুদিখানা ও জেনারেল স্টোর (Grocery & Kirana)', en: 'Grocery & General Store' },
+  { id: 'garments', bn: 'বস্ত্রালয় ও তৈরি পোশাক (Clothing & Apparel)', en: 'Clothing & Apparel' },
+  { id: 'electronics', bn: 'ইলেকট্রনিক্স ও মোবাইল শপ (Electronics & Mobile)', en: 'Electronics & Mobile' },
+  { id: 'pharmacy', bn: 'ফার্মেসি ও ঔষধের দোকান (Pharmacy & Medical)', en: 'Pharmacy & Medical' },
+  { id: 'supermarket', bn: 'ডিপার্টমেন্টাল ও সুপারমার্কেট (Supermarket)', en: 'Supermarket & Mart' },
+  { id: 'cafe', bn: 'হোটেল, রেস্তোরাঁ ও বেকারি (Cafe & Bakery)', en: 'Cafe & Restaurant' },
+  { id: 'hardware', bn: 'হার্ডওয়্যার ও স্যানিটারি (Hardware & Sanitary)', en: 'Hardware & Sanitary' },
+  { id: 'stationery', bn: 'বই ও স্টেশনারি (Books & Stationery)', en: 'Books & Stationery' },
+  { id: 'other', bn: 'অন্যান্য রিটেল ব্যবসা (Other Retail)', en: 'Other Retail Store' },
+];
 
 export function AuthScreen() {
-  const { setUser, setCurrentView } = useApp();
-  const [authMethod, setAuthMethod] = useState<'mobile' | 'email'>('mobile');
-  const [mobileStep, setMobileStep] = useState<'phone' | 'otp'>('phone');
+  const { 
+    setUser, 
+    setCurrentView, 
+    business, 
+    updateBusiness, 
+    language, 
+    setLanguage 
+  } = useApp();
 
-  // Mobile state
-  const [phoneNumber, setPhoneNumber] = useState('98765 43210');
-  const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
-  const [resendTimer, setResendTimer] = useState(28);
+  const [activeTab, setActiveTab] = useState<AuthTab>('login');
+  const [loginMode, setLoginMode] = useState<LoginMode>('otp');
+  const [otpStep, setOtpStep] = useState<'phone' | 'code'>('phone');
 
-  // Email state
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState('sayan@gmail.com');
-  const [password, setPassword] = useState('pass1234');
-  const [name, setName] = useState('Sayan Kumar Patra');
+  // Form States
+  const [loginPhone, setLoginPhone] = useState('9876543210');
+  const [loginPassword, setLoginPassword] = useState('shop1234');
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  const handleSendOtp = (e: FormEvent) => {
+  // OTP Verification States
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [resendCountdown, setResendCountdown] = useState(30);
+  const [isResendActive, setIsResendActive] = useState(false);
+
+  // Sign Up Form States
+  const [shopName, setShopName] = useState('');
+  const [ownerName, setOwnerName] = useState('');
+  const [signUpPhone, setSignUpPhone] = useState('');
+  const [signUpEmail, setSignUpEmail] = useState('');
+  const [shopCategory, setShopCategory] = useState(STORE_CATEGORIES[0].bn);
+  const [signUpPassword, setSignUpPassword] = useState('');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
+  const [acceptTerms, setAcceptTerms] = useState(true);
+
+  // Feedback Toast message
+  const [formError, setFormError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isResendActive && resendCountdown > 0) {
+      timer = setTimeout(() => {
+        setResendCountdown(prev => prev - 1);
+      }, 1000);
+    } else if (resendCountdown === 0) {
+      setIsResendActive(false);
+    }
+    return () => clearTimeout(timer);
+  }, [isResendActive, resendCountdown]);
+
+  const handleSwitchTab = (tab: AuthTab) => {
+    playSound('click');
+    setActiveTab(tab);
+    setFormError(null);
+  };
+
+  const toggleLanguage = () => {
+    playSound('click');
+    setLanguage(language === 'bn' ? 'en' : 'bn');
+  };
+
+  // --- LOGIN OTP FLOW ---
+  const handleRequestOtp = (e: FormEvent) => {
     e.preventDefault();
-    if (phoneNumber.trim().length >= 10) {
-      setMobileStep('otp');
-      setResendTimer(28);
+    const clean = loginPhone.replace(/\D/g, '');
+    if (clean.length < 10) {
+      playSound('error');
+      setFormError(language === 'bn' ? 'সঠিক ১০ ডিজিটের মোবাইল নম্বর লিখুন।' : 'Enter a valid 10-digit mobile number.');
+      return;
+    }
+    setFormError(null);
+    playSound('success');
+    setOtpStep('code');
+    setOtpDigits(['1', '2', '3', '4', '5', '6']);
+    setIsResendActive(true);
+    setResendCountdown(30);
+  };
+
+  const handleOtpDigitChange = (index: number, val: string) => {
+    const clean = val.replace(/\D/g, '').slice(-1);
+    const updated = [...otpDigits];
+    updated[index] = clean;
+    setOtpDigits(updated);
+
+    if (clean && index < 5) {
+      const nextInput = document.getElementById(`auth-otp-${index + 1}`);
+      nextInput?.focus();
     }
   };
 
   const handleVerifyOtp = (e: FormEvent) => {
     e.preventDefault();
+    const code = otpDigits.join('');
+    if (code.length < 6) {
+      playSound('error');
+      setFormError(language === 'bn' ? 'সম্পূর্ণ ৬ ডিজিটের ওটিপি দিন।' : 'Enter all 6 digits of the OTP.');
+      return;
+    }
+
+    playSound('fanfare');
+    setUser(prev => ({
+      ...prev,
+      name: prev.name || 'Sayan Kumar Patra',
+      phone: loginPhone,
+      isAuthenticated: true,
+      hasCompletedSetup: false,
+      hasCompletedOnboarding: true,
+    }));
+    setCurrentView('business-setup');
+  };
+
+  const handlePasswordLogin = (e: FormEvent) => {
+    e.preventDefault();
+    if (!loginPhone.trim() || !loginPassword.trim()) {
+      playSound('error');
+      setFormError(language === 'bn' ? 'মোবাইল ও পাসওয়ার্ড দুটিই প্রয়োজন।' : 'Mobile and password are required.');
+      return;
+    }
+
+    playSound('success');
+    setUser(prev => ({
+      ...prev,
+      name: prev.name || 'Sayan Kumar Patra',
+      phone: loginPhone,
+      isAuthenticated: true,
+      hasCompletedSetup: false,
+      hasCompletedOnboarding: true,
+    }));
+    setCurrentView('business-setup');
+  };
+
+  const handleQuickDemoLogin = () => {
+    playSound('fanfare');
     setUser({
       id: 'usr-1',
       name: 'Sayan Kumar Patra',
       email: 'sayan@gmail.com',
+      phone: '9876543210',
+      storeName: business.shopName || 'Sayan General Store',
       isAuthenticated: true,
-      hasCompletedSetup: true,
+      hasCompletedSetup: false,
       hasCompletedOnboarding: true,
     });
-    setCurrentView('dashboard');
+    setCurrentView('business-setup');
   };
 
-  const handleEmailSubmit = (e: FormEvent) => {
+  // --- SIGN UP HANDLER ---
+  const handleSignUpStore = (e: FormEvent) => {
     e.preventDefault();
+    if (!shopName.trim()) {
+      playSound('error');
+      setFormError(language === 'bn' ? 'দোকানের নাম লিখতে হবে।' : 'Store name is required.');
+      return;
+    }
+    if (!ownerName.trim()) {
+      playSound('error');
+      setFormError(language === 'bn' ? 'দোকানদারের নাম লিখতে হবে।' : 'Owner name is required.');
+      return;
+    }
+    const cleanPhone = signUpPhone.replace(/\D/g, '');
+    if (cleanPhone.length < 10) {
+      playSound('error');
+      setFormError(language === 'bn' ? '১০ ডিজিটের মোবাইল নম্বর দিন।' : 'Enter a valid 10-digit phone number.');
+      return;
+    }
+    if (!signUpPassword || signUpPassword.length < 4) {
+      playSound('error');
+      setFormError(language === 'bn' ? 'কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড দিন।' : 'Password must be at least 4 characters.');
+      return;
+    }
+    if (!acceptTerms) {
+      playSound('error');
+      setFormError(language === 'bn' ? 'শর্তাবলীতে টিক দিন।' : 'Please accept the terms & conditions.');
+      return;
+    }
+
+    updateBusiness({
+      shopName: shopName.trim(),
+      ownerName: ownerName.trim(),
+      phone: `+91 ${cleanPhone}`,
+      email: signUpEmail.trim() || `${cleanPhone}@billkart.in`,
+      category: shopCategory,
+    });
+
     setUser({
-      id: 'usr-1',
-      name: isSignUp ? name : 'Sayan Kumar Patra',
-      email: email,
+      id: `usr-${Date.now()}`,
+      name: ownerName.trim(),
+      email: signUpEmail.trim() || `${cleanPhone}@billkart.in`,
+      phone: `+91 ${cleanPhone}`,
+      storeName: shopName.trim(),
       isAuthenticated: true,
-      hasCompletedSetup: true,
+      hasCompletedSetup: false,
       hasCompletedOnboarding: true,
     });
-    setCurrentView('dashboard');
-  };
 
-  const handleOtpDigitChange = (index: number, val: string) => {
-    if (val.length > 1) {
-      val = val.slice(-1);
-    }
-    const next = [...otpCode];
-    next[index] = val;
-    setOtpCode(next);
-
-    // auto focus next input
-    if (val && index < 5) {
-      const nextInput = document.getElementById(`otp-input-${index + 1}`);
-      nextInput?.focus();
-    }
+    playSound('fanfare');
+    setCurrentView('business-setup');
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#070709] text-[#F5F5F7] flex flex-col justify-center items-center p-4 sm:p-6 relative select-none">
-      {/* Background ambient light */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#FF1E42]/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-between items-center p-4 sm:p-6 select-none">
+      
+      {/* Top Header */}
+      <header className="w-full max-w-md mx-auto flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
+        <BillKartLogo size="sm" showTagline={false} horizontal={true} />
 
-      <div className="w-full max-w-md bg-[#130F17]/90 border border-white/10 rounded-3xl p-6 sm:p-8 shadow-[0_20px_50px_rgba(0,0,0,0.7)] backdrop-blur-xl relative z-10">
-        <div className="flex justify-center mb-6">
-          <BillKartLogo size="md" />
-        </div>
-
-        {/* Method Toggle: Mobile OTP vs Email Login */}
-        <div className="flex rounded-xl bg-[#1C1420] p-1 mb-6 border border-white/10">
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => {
-              setAuthMethod('mobile');
-              setMobileStep('phone');
-            }}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              authMethod === 'mobile'
-                ? 'bg-[#2B1422] text-[#FFA000] border border-[#FF1E42]/35 shadow-sm'
-                : 'text-[#A09CA8] hover:text-white'
-            }`}
+            onClick={toggleLanguage}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-2xs"
           >
-            <Phone className="w-3.5 h-3.5" />
-            <span>Mobile OTP</span>
+            <Globe className="w-3.5 h-3.5 text-blue-600" />
+            <span>{language === 'bn' ? 'English' : 'বাংলা'}</span>
           </button>
+
           <button
             type="button"
-            onClick={() => setAuthMethod('email')}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              authMethod === 'email'
-                ? 'bg-[#2B1422] text-[#FFA000] border border-[#FF1E42]/35 shadow-sm'
-                : 'text-[#A09CA8] hover:text-white'
-            }`}
+            onClick={() => setCurrentView('onboarding')}
+            className="text-xs font-semibold text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white px-2 py-1"
           >
-            <Mail className="w-3.5 h-3.5" />
-            <span>Email Login</span>
+            {language === 'bn' ? 'গাইড' : 'Tour'}
           </button>
         </div>
+      </header>
 
-        {authMethod === 'mobile' ? (
-          mobileStep === 'phone' ? (
-            /* Screen 04: Mobile Number Entry */
-            <motion.form
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              onSubmit={handleSendOtp}
-              className="space-y-4"
+      {/* Main Form Container */}
+      <main className="w-full max-w-md mx-auto my-auto py-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-7 shadow-xs space-y-5">
+          
+          {/* Tabs: Login vs Sign Up */}
+          <div className="grid grid-cols-2 p-1 rounded-xl bg-slate-100 dark:bg-slate-800">
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('login')}
+              className={`py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === 'login'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
             >
-              <div className="text-center space-y-1 mb-4">
-                <h3 className="text-lg font-bold text-white">Enter Mobile Number</h3>
-                <p className="text-xs text-[#A09CA8]">We'll send a 6-digit OTP to verify your account</p>
+              <LogIn className="w-4 h-4" />
+              <span>{language === 'bn' ? 'লগইন' : 'Login'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('signup')}
+              className={`py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                activeTab === 'signup'
+                  ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+              }`}
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>{language === 'bn' ? 'নতুন দোকান' : 'Sign Up'}</span>
+            </button>
+          </div>
+
+          {/* Error Message */}
+          {formError && (
+            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-xs font-medium text-red-700 dark:text-red-300">
+              {formError}
+            </div>
+          )}
+
+          {/* 1. LOGIN TAB */}
+          {activeTab === 'login' && (
+            <div className="space-y-4">
+              {/* Login Mode Selector */}
+              <div className="flex items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-400 pb-1 border-b border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => { setLoginMode('otp'); setOtpStep('phone'); setFormError(null); }}
+                  className={`pb-1 transition-colors border-b-2 ${
+                    loginMode === 'otp' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent'
+                  }`}
+                >
+                  {language === 'bn' ? 'ওটিপি (OTP) লগইন' : 'OTP Login'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setLoginMode('password'); setFormError(null); }}
+                  className={`pb-1 transition-colors border-b-2 ${
+                    loginMode === 'password' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent'
+                  }`}
+                >
+                  {language === 'bn' ? 'পাসওয়ার্ড লগইন' : 'Password Login'}
+                </button>
               </div>
 
-              <div>
-                <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1.5">
-                  Phone Number
-                </label>
-                <div className="flex items-center gap-2">
-                  <span className="px-3 py-2.5 rounded-xl bg-[#1C1420] border border-white/10 text-xs font-bold text-[#FFA000]">
-                    🇮🇳 +91
-                  </span>
-                  <div className="relative flex-1">
-                    <input
-                      type="tel"
-                      required
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="98765 43210"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#18111D] border border-white/10 focus:border-[#FF1E42] text-xs text-white placeholder-[#777] focus:outline-none tracking-wider"
-                    />
+              {/* OTP Mode */}
+              {loginMode === 'otp' && (
+                otpStep === 'phone' ? (
+                  <form onSubmit={handleRequestOtp} className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {language === 'bn' ? 'দোকানের রেজিস্টার্ড মোবাইল নম্বর' : 'Registered Mobile Number'}
+                      </label>
+                      <div className="relative">
+                        <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="tel"
+                          value={loginPhone}
+                          onChange={(e) => setLoginPhone(e.target.value)}
+                          placeholder="9876543210"
+                          className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors flex items-center justify-center gap-2"
+                    >
+                      <span>{language === 'bn' ? 'ওটিপি (OTP) পাঠান' : 'Send OTP'}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} className="space-y-4">
+                    <div className="text-center space-y-1">
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        {loginPhone} নম্বরে পাঠানো ৬-ডিজিট ওটিপি কোড দিন
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setOtpStep('phone')}
+                        className="text-[11px] font-semibold text-blue-600 hover:underline"
+                      >
+                        {language === 'bn' ? 'নম্বর পরিবর্তন করুন' : 'Change Number'}
+                      </button>
+                    </div>
+
+                    {/* 6 Digit Inputs */}
+                    <div className="flex items-center justify-center gap-2">
+                      {otpDigits.map((digit, i) => (
+                        <input
+                          key={i}
+                          id={`auth-otp-${i}`}
+                          type="text"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleOtpDigitChange(i, e.target.value)}
+                          className="w-10 h-12 text-center text-lg font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                        />
+                      ))}
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      <span>{language === 'bn' ? 'ওটিপি যাচাই করে প্রবেশ করুন' : 'Verify & Continue'}</span>
+                    </button>
+                  </form>
+                )
+              )}
+
+              {/* Password Mode */}
+              {loginMode === 'password' && (
+                <form onSubmit={handlePasswordLogin} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {language === 'bn' ? 'মোবাইল নম্বর' : 'Mobile Number'}
+                    </label>
+                    <div className="relative">
+                      <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type="tel"
+                        value={loginPhone}
+                        onChange={(e) => setLoginPhone(e.target.value)}
+                        placeholder="9876543210"
+                        className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                      />
+                    </div>
                   </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {language === 'bn' ? 'পাসওয়ার্ড' : 'Password'}
+                    </label>
+                    <div className="relative">
+                      <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        type={showLoginPassword ? 'text' : 'password'}
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      >
+                        {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors flex items-center justify-center gap-2"
+                  >
+                    <span>{language === 'bn' ? 'লগইন করুন' : 'Sign In'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
+
+              {/* 1-Click Fast Demo Login */}
+              <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={handleQuickDemoLogin}
+                  className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors"
+                >
+                  <Zap className="w-4 h-4 text-blue-600" />
+                  <span>{language === 'bn' ? 'সরাসরি ডেমো লগইন (১-ক্লিক)' : 'Instant 1-Click Demo Login'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 2. SIGN UP TAB */}
+          {activeTab === 'signup' && (
+            <form onSubmit={handleSignUpStore} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'দোকান বা ব্যবসার নাম *' : 'Shop / Business Name *'}
+                </label>
+                <div className="relative">
+                  <Store className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={shopName}
+                    onChange={(e) => setShopName(e.target.value)}
+                    placeholder="উদাঃ সায়ন জেনারেল স্টোর"
+                    className="w-full pl-10 pr-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                  />
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-3.5 rounded-2xl btn-primary-gradient text-white font-extrabold text-xs shadow-[0_6px_25px_rgba(255,30,66,0.35)] transition-all flex items-center justify-center gap-2 mt-4"
-              >
-                <span>Get OTP</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-
-              <div className="flex items-center justify-center gap-1.5 pt-2 text-[11px] text-[#A09CA8]">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#FFA000]" />
-                <span>100% Secure merchant verification</span>
-              </div>
-            </motion.form>
-          ) : (
-            /* Screen 05: 6-Digit OTP Verification */
-            <motion.form
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              onSubmit={handleVerifyOtp}
-              className="space-y-4"
-            >
-              <div className="text-center space-y-1 mb-4">
-                <h3 className="text-lg font-bold text-white">Verify Phone Number</h3>
-                <p className="text-xs text-[#A09CA8]">
-                  Code sent to <span className="text-[#FFA000] font-semibold">+91 {phoneNumber}</span>
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setMobileStep('phone')}
-                  className="text-[11px] text-[#FF4A6B] hover:underline"
-                >
-                  Edit Number
-                </button>
-              </div>
-
-              {/* 6 Digit OTP inputs */}
-              <div className="flex justify-between gap-2 py-2">
-                {[0, 1, 2, 3, 4, 5].map((idx) => (
-                  <input
-                    key={idx}
-                    id={`otp-input-${idx}`}
-                    type="text"
-                    maxLength={1}
-                    value={otpCode[idx]}
-                    onChange={(e) => handleOtpDigitChange(idx, e.target.value)}
-                    className="w-11 h-12 text-center text-lg font-bold rounded-xl bg-[#1C1420] border border-white/15 focus:border-[#FF1E42] text-[#FFA000] focus:outline-none focus:shadow-[0_0_12px_rgba(255,30,66,0.5)]"
-                  />
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-[#A09CA8] pt-1">
-                <span>Didn't receive code?</span>
-                <button
-                  type="button"
-                  onClick={() => setResendTimer(28)}
-                  disabled={resendTimer > 0}
-                  className={`flex items-center gap-1 font-semibold ${
-                    resendTimer > 0 ? 'text-[#777] cursor-not-allowed' : 'text-[#FF4A6B] hover:underline'
-                  }`}
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>{resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}</span>
-                </button>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3.5 rounded-2xl btn-primary-gradient text-white font-extrabold text-xs shadow-[0_6px_25px_rgba(255,30,66,0.35)] transition-all flex items-center justify-center gap-2 mt-4"
-              >
-                <span>Verify & Continue</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </motion.form>
-          )
-        ) : (
-          /* Email / Password Form */
-          <motion.form
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            onSubmit={handleEmailSubmit}
-            className="space-y-3.5"
-          >
-            {isSignUp && (
               <div>
-                <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                  Store Owner Name
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'দোকানদার / প্রোপাইটার নাম *' : 'Owner / Merchant Name *'}
                 </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Sayan Kumar Patra"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#18111D] border border-white/10 text-xs text-white placeholder-[#777] focus:outline-none focus:border-[#FF1E42]"
-                />
+                <div className="relative">
+                  <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    required
+                    value={ownerName}
+                    onChange={(e) => setOwnerName(e.target.value)}
+                    placeholder="উদাঃ সায়ন কুমার পাত্র"
+                    className="w-full pl-10 pr-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                  />
+                </div>
               </div>
-            )}
 
-            <div>
-              <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF4A6B]" />
-                <input
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="sayan@gmail.com"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#18111D] border border-white/10 text-xs text-white placeholder-[#777] focus:outline-none focus:border-[#FF1E42]"
-                />
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'মোবাইল নম্বর *' : 'Mobile Number *'}
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="tel"
+                    required
+                    value={signUpPhone}
+                    onChange={(e) => setSignUpPhone(e.target.value)}
+                    placeholder="9876543210"
+                    className="w-full pl-10 pr-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                  />
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="block text-[11px] font-semibold text-[#A09CA8] mb-1">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF4A6B]" />
-                <input
-                  type="password"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-[#18111D] border border-white/10 text-xs text-white placeholder-[#777] focus:outline-none focus:border-[#FF1E42]"
-                />
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'ব্যবসার ধরন / ক্যাটাগরি' : 'Business Category'}
+                </label>
+                <select
+                  value={shopCategory}
+                  onChange={(e) => setShopCategory(e.target.value)}
+                  className="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                >
+                  {STORE_CATEGORIES.map((cat) => (
+                    <option key={cat.id} value={language === 'bn' ? cat.bn : cat.en}>
+                      {language === 'bn' ? cat.bn : cat.en}
+                    </option>
+                  ))}
+                </select>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              className="w-full py-3.5 rounded-2xl btn-primary-gradient text-white font-extrabold text-xs shadow-[0_6px_25px_rgba(255,30,66,0.35)] transition-all flex items-center justify-center gap-2 mt-4"
-            >
-              {isSignUp ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />}
-              <span>{isSignUp ? 'Create BillKart Account' : 'Login to Store Terminal'}</span>
-            </button>
-          </motion.form>
-        )}
-      </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  {language === 'bn' ? 'পাসওয়ার্ড নির্ধারণ করুন *' : 'Create Password *'}
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type={showSignUpPassword ? 'text' : 'password'}
+                    required
+                    value={signUpPassword}
+                    onChange={(e) => setSignUpPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-10 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showSignUpPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="signup-terms"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="rounded text-blue-600 focus:ring-blue-600"
+                />
+                <label htmlFor="signup-terms" className="text-xs text-slate-600 dark:text-slate-400">
+                  {language === 'bn' ? 'আমি শর্তাবলীতে সম্মতি জানাচ্ছি' : 'I agree to the terms of service'}
+                </label>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm shadow-xs transition-colors flex items-center justify-center gap-2"
+              >
+                <span>{language === 'bn' ? 'দোকান তৈরি করুন' : 'Register Store'}</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </form>
+          )}
+
+        </div>
+      </main>
+
+      {/* Footer Security Badge */}
+      <footer className="w-full max-w-md mx-auto text-center pt-2">
+        <div className="inline-flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>100% সুরক্ষিত রিটেল টার্মিনাল • অফলাইন ও ক্লাউড ডাটা সিঙ্ক</span>
+        </div>
+      </footer>
     </div>
   );
 }
-

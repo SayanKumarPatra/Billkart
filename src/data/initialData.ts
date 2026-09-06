@@ -1,16 +1,35 @@
 import { Product, Customer, Bill, BusinessProfile } from '../types';
 
 export const INITIAL_BUSINESS: BusinessProfile = {
-  shopName: 'Sayan General Store',
-  ownerName: 'Sayan Kumar Patra',
+  shopName: 'সায়ন জেনারেল স্টোর (Sayan General Store)',
+  tagline: 'সেরা দামে খাঁটি মানের বিশ্বস্ত পারিবারিক প্রতিষ্ঠান',
+  ownerName: 'সায়ন কুমার পাত্র (Sayan Kumar Patra)',
   phone: '+91 98765 43210',
-  email: 'sayan@gmail.com',
-  address: 'College Road, Kolkata, West Bengal 700073',
-  category: 'Retail Store',
+  secondaryPhone: '+91 91234 56789',
+  email: 'sayan.patra@billkart.in',
+  address: '১২/বি কলেজ স্ট্রিট, বউবাজার মার্কেট',
+  landmark: 'প্রেসিডেন্সি ইউনিভার্সিটির কাছে',
+  city: 'কলকাতা',
+  district: 'কলকাতা (Kolkata)',
+  state: 'পশ্চিমবঙ্গ (West Bengal)',
+  pinCode: '700073',
+  category: 'মুদিখানা ও জেনারেল স্টোর (Grocery & Kirana)',
+  establishedYear: '2019',
   gstNumber: '19ABCDE1234F1Z5',
+  panNumber: 'ABCDE1234F',
+  tradeLicenseNumber: 'TL/KMC/2024/09812',
+  fssaiNumber: '22823015000452',
   upiId: 'sayan.patra@okhdfcbank',
+  upiPayeeName: 'Sayan General Store',
+  bankName: 'State Bank of India',
+  bankAccountNumber: '389201992012',
+  bankIfsc: 'SBIN0000001',
   currency: '₹',
   invoicePrefix: 'BK',
+  receiptFooterText: 'আমাদের দোকানে কেনাকাটা করার জন্য ধন্যবাদ! আবার আসবেন।',
+  termsAndConditions: 'ক্যাশ মেমো সহ ৩ দিনের মধ্যে অক্ষত অবস্থায় পণ্য পরিবর্তনযোগ্য। কোনো ক্যাশ রিফান্ড হবে না।',
+  printerType: '80mm',
+  showQrOnBill: true,
   logoUrl: '',
 };
 
@@ -72,8 +91,18 @@ export const INITIAL_PRODUCTS: Product[] = [
   },
 ];
 
-// Clean initial customer list - starts fresh as requested
-export const INITIAL_CUSTOMERS: Customer[] = [];
+// Default Walk-in customer so billing operations always have a valid customer target
+export const DEFAULT_CUSTOMER: Customer = {
+  id: 'cust-walkin',
+  name: 'Walk-in Customer (নগদ খরিদ্দার)',
+  phone: '9800000000',
+  totalPurchases: 0,
+  billsCount: 0,
+  createdAt: '2026-09-06',
+};
+
+// Initial customer list with default walk-in customer
+export const INITIAL_CUSTOMERS: Customer[] = [DEFAULT_CUSTOMER];
 
 // Clean initial bills - starts with 0 bills / ₹0 sales as requested
 export const INITIAL_BILLS: Bill[] = [];
