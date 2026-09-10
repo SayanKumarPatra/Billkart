@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
-  LayoutDashboard, 
-  ShoppingCart, 
+  LayoutGrid, 
+  Receipt, 
   Barcode, 
   Package, 
   Menu, 
@@ -11,13 +11,10 @@ import {
   BarChart3, 
   Settings, 
   HelpCircle, 
-  Globe, 
-  Sun, 
-  Moon, 
-  Monitor, 
-  RotateCcw,
   LogOut,
-  Compass
+  ChevronRight,
+  Sparkles,
+  Store
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
 import { AppView } from '../../types';
@@ -29,15 +26,14 @@ export function MobileBottomNav() {
     setCurrentView, 
     openScanner, 
     cartItems, 
+    products,
     language, 
-    setLanguage, 
-    themeMode, 
-    setThemeMode,
     business,
     logout
   } = useApp();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const lowStockCount = products.filter(p => p.stock <= p.minStockAlert).length;
 
   const handleNav = (view: AppView) => {
     playSound('click');
@@ -51,31 +47,11 @@ export function MobileBottomNav() {
     setIsMenuOpen(false);
   };
 
-  const toggleLanguage = () => {
-    playSound('click');
-    setLanguage(language === 'bn' ? 'en' : 'bn');
-  };
-
-  const toggleTheme = () => {
-    const next = themeMode === 'light' ? 'dark' : themeMode === 'dark' ? 'system' : 'light';
-    setThemeMode(next);
-    playSound('click');
-  };
-
-  const restartFlow = () => {
-    playSound('click');
-    try {
-      sessionStorage.removeItem('billkart_session_started');
-    } catch (e) { /* ignore */ }
-    setIsMenuOpen(false);
-    setCurrentView('splash');
-  };
-
   return (
     <>
       {/* Expanded Menu Drawer (Modal Sheet) */}
       {isMenuOpen && (
-        <div className="lg:hidden fixed inset-0 z-50 flex flex-col justify-end">
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
           {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
@@ -83,132 +59,155 @@ export function MobileBottomNav() {
           />
 
           {/* Drawer Sheet */}
-          <div className="relative bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-5 shadow-2xl z-10 max-h-[85vh] overflow-y-auto space-y-4">
+          <div className="relative bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-4 sm:p-5 shadow-2xl z-10 max-h-[82vh] overflow-y-auto space-y-3.5">
+            {/* Drawer Header */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {business.shopName || 'BillKart POS'}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {business.ownerName || 'দোকানদার'} • {language === 'bn' ? 'মেনু ও সেটিংস' : 'Menu & Tools'}
-                </p>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-200/60 dark:border-blue-800/60">
+                  <Store className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {business.shopName || 'BillKart POS'}
+                  </h3>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                    {business.ownerName || 'দোকানদার'} • {language === 'bn' ? 'সকল মেনু ও ফিচার' : 'All Menus & Features'}
+                  </p>
+                </div>
               </div>
+
               <button
                 type="button"
                 onClick={() => setIsMenuOpen(false)}
-                className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white"
+                className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Quick Actions Grid */}
-            <div className="grid grid-cols-2 gap-2.5">
+            {/* Quick Navigation Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              {/* Customers */}
               <button
                 type="button"
                 onClick={() => handleNav('customers')}
-                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left border border-slate-200/80 dark:border-slate-800 transition-colors"
+                className={`flex items-center gap-2.5 p-3 rounded-xl text-left border transition-all ${
+                  currentView === 'customers'
+                    ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-800 text-blue-700 dark:text-blue-300'
+                    : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-800'
+                }`}
               >
-                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                  <Users className="w-4 h-4" />
+                </div>
                 <div className="min-w-0">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
-                    {language === 'bn' ? 'কাস্টমার খতিয়ান' : 'Customers'}
+                    {language === 'bn' ? 'গ্রাহক খতিয়ান' : 'Customers'}
                   </span>
                   <span className="text-[10px] text-slate-500 block truncate">
-                    {language === 'bn' ? 'বাকি ও কাস্টমার তালিকা' : 'Directory & dues'}
+                    {language === 'bn' ? 'বাকি ও কাস্টমার' : 'Ledger & dues'}
                   </span>
                 </div>
               </button>
 
+              {/* Bills & Invoices */}
               <button
                 type="button"
                 onClick={() => handleNav('bills')}
-                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left border border-slate-200/80 dark:border-slate-800 transition-colors"
+                className={`flex items-center gap-2.5 p-3 rounded-xl text-left border transition-all ${
+                  currentView === 'bills'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-800'
+                }`}
               >
-                <FileText className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                  <FileText className="w-4 h-4" />
+                </div>
                 <div className="min-w-0">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
-                    {language === 'bn' ? 'সকল ইনভয়েস' : 'All Bills'}
+                    {language === 'bn' ? 'সকল ইনভয়েস' : 'Invoices'}
                   </span>
                   <span className="text-[10px] text-slate-500 block truncate">
-                    {language === 'bn' ? 'ইতিহাস ও প্রিন্ট' : 'History & reprint'}
+                    {language === 'bn' ? 'ইতিহাস ও প্রিন্ট' : 'History & print'}
                   </span>
                 </div>
               </button>
 
+              {/* Reports */}
               <button
                 type="button"
                 onClick={() => handleNav('reports')}
-                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left border border-slate-200/80 dark:border-slate-800 transition-colors"
+                className={`flex items-center gap-2.5 p-3 rounded-xl text-left border transition-all ${
+                  currentView === 'reports'
+                    ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300'
+                    : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-800'
+                }`}
               >
-                <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
+                <div className="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                  <BarChart3 className="w-4 h-4" />
+                </div>
                 <div className="min-w-0">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
                     {language === 'bn' ? 'বিক্রয় রিপোর্ট' : 'Reports'}
                   </span>
                   <span className="text-[10px] text-slate-500 block truncate">
-                    {language === 'bn' ? 'দৈনিক হিসাব ও লাভ' : 'Sales & insights'}
+                    {language === 'bn' ? 'দৈনিক লাভ-লোকসান' : 'Sales & insights'}
                   </span>
                 </div>
               </button>
 
+              {/* Settings */}
               <button
                 type="button"
                 onClick={() => handleNav('settings')}
-                className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-left border border-slate-200/80 dark:border-slate-800 transition-colors"
+                className={`flex items-center gap-2.5 p-3 rounded-xl text-left border transition-all ${
+                  currentView === 'settings'
+                    ? 'bg-amber-50 dark:bg-amber-950/60 border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300'
+                    : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200/80 dark:border-slate-800'
+                }`}
               >
-                <Settings className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                  <Settings className="w-4 h-4" />
+                </div>
                 <div className="min-w-0">
                   <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block truncate">
                     {language === 'bn' ? 'দোকান সেটিংস' : 'Settings'}
                   </span>
                   <span className="text-[10px] text-slate-500 block truncate">
-                    {language === 'bn' ? 'ইউপিআই ও প্রোফাইল' : 'UPI & printer'}
+                    {language === 'bn' ? 'ইউপিআই ও প্রিন্টার' : 'UPI & printer'}
                   </span>
                 </div>
               </button>
             </div>
 
-            {/* Quick Toggle Controls */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  {language === 'bn' ? 'ভাষা নির্বাচন' : 'Language'}
-                </span>
-                <button
-                  type="button"
-                  onClick={toggleLanguage}
-                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-bold text-blue-600 dark:text-blue-400"
-                >
-                  {language === 'bn' ? 'বাংলা (বাং)' : 'English (EN)'}
-                </button>
+            {/* Help & Support Button */}
+            <button
+              type="button"
+              onClick={() => handleNav('help')}
+              className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-800 text-left transition-colors"
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/40 text-teal-600 dark:text-teal-400 flex items-center justify-center shrink-0">
+                  <HelpCircle className="w-4 h-4" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                    {language === 'bn' ? 'সহায়তা ও ব্যবহার নির্দেশিকা' : 'Help & User Guide'}
+                  </span>
+                  <span className="text-[10px] text-slate-500">
+                    {language === 'bn' ? 'প্রশ্নোত্তর ও টিউটোরিয়াল' : 'FAQ & Support'}
+                  </span>
+                </div>
               </div>
+              <ChevronRight className="w-4 h-4 text-slate-400" />
+            </button>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40">
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  {language === 'bn' ? 'থিম ডিসপ্লে' : 'Theme Mode'}
-                </span>
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
-                >
-                  {themeMode === 'light' ? <Sun className="w-3.5 h-3.5 text-amber-500" /> : <Moon className="w-3.5 h-3.5 text-blue-400" />}
-                  <span className="capitalize">{themeMode}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Tour & Logout */}
+            {/* Clean Logout */}
             <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={restartFlow}
-                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5"
-              >
-                <Compass className="w-4 h-4 text-blue-600" />
-                <span>{language === 'bn' ? 'গাইড ও টিউটোরিয়াল' : 'Tutorial Guide'}</span>
-              </button>
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <span>BillKart Mobile v2.6</span>
+              </div>
 
               <button
                 type="button"
@@ -216,9 +215,9 @@ export function MobileBottomNav() {
                   setIsMenuOpen(false);
                   logout();
                 }}
-                className="py-2.5 px-4 rounded-xl bg-red-50 dark:bg-red-950/40 text-red-600 text-xs font-semibold flex items-center gap-1.5"
+                className="py-2 px-3.5 rounded-xl bg-red-50 dark:bg-red-950/40 hover:bg-red-100 text-red-600 text-xs font-semibold flex items-center gap-1.5 transition-colors"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
                 <span>{language === 'bn' ? 'লগ আউট' : 'Logout'}</span>
               </button>
             </div>
@@ -226,80 +225,85 @@ export function MobileBottomNav() {
         </div>
       )}
 
-      {/* Modern, Rock-Solid Bottom Navigation Bar */}
+      {/* Modern, Thumb-Friendly Mobile Bottom Navigation Bar */}
       <nav 
         id="mobile-bottom-nav"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 safe-area-pb transition-colors shadow-lg"
+        className="sticky bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200 dark:border-slate-800 safe-area-pb transition-colors shadow-lg shrink-0"
       >
-        <div className="flex items-center justify-around px-1 py-1.5 max-w-md mx-auto">
+        <div className="flex items-center justify-around px-1 py-1.5 w-full">
           {/* 1. Dashboard */}
           <button
             type="button"
             id="mobile-nav-dashboard"
             onClick={() => handleNav('dashboard')}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors min-h-[46px] ${
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all min-h-[46px] ${
               currentView === 'dashboard'
-                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                ? 'text-blue-600 dark:text-blue-400 font-bold scale-102'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            <LayoutDashboard className="w-5 h-5 mb-0.5" />
+            <LayoutGrid className="w-5 h-5 mb-0.5" />
             <span className="text-[10px] leading-tight truncate w-full text-center">
               {language === 'bn' ? 'ড্যাশবোর্ড' : 'Home'}
             </span>
           </button>
 
-          {/* 2. Create Bill / Cart */}
+          {/* 2. Billing / Cart */}
           <button
             type="button"
             id="mobile-nav-create-bill"
             onClick={() => handleNav('create-bill')}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors relative min-h-[46px] ${
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all relative min-h-[46px] ${
               currentView === 'create-bill'
-                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                ? 'text-blue-600 dark:text-blue-400 font-bold scale-102'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
             <div className="relative">
-              <ShoppingCart className="w-5 h-5 mb-0.5" />
+              <Receipt className="w-5 h-5 mb-0.5" />
               {cartItems.length > 0 && (
-                <span className="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-blue-600 text-white">
+                <span className="absolute -top-1.5 -right-2 px-1.5 py-0.2 rounded-full text-[9px] font-bold bg-blue-600 text-white animate-bounce">
                   {cartItems.length}
                 </span>
               )}
             </div>
             <span className="text-[10px] leading-tight truncate w-full text-center">
-              {language === 'bn' ? 'বিল তৈরি' : 'Billing'}
+              {language === 'bn' ? 'ক্যাশ মেমো' : 'Billing'}
             </span>
           </button>
 
-          {/* 3. Central Barcode Scanner */}
-          <div className="flex-1 flex justify-center -mt-3">
+          {/* 3. Central Prominent Scanner FAB */}
+          <div className="flex-1 flex justify-center -mt-3.5">
             <button
               type="button"
               id="mobile-nav-scanner"
               onClick={handleScanClick}
-              className="w-12 h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex flex-col items-center justify-center shadow-md transition-all"
-              title="Scan Barcode"
+              className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 active:scale-95 text-white flex flex-col items-center justify-center shadow-lg shadow-blue-500/30 transition-all border-2 border-white dark:border-slate-900"
+              title="Scan Barcode via Camera"
             >
               <Barcode className="w-6 h-6" />
             </button>
           </div>
 
-          {/* 4. Products */}
+          {/* 4. Products / Stock */}
           <button
             type="button"
             id="mobile-nav-products"
             onClick={() => handleNav('products')}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors min-h-[46px] ${
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all relative min-h-[46px] ${
               currentView === 'products'
-                ? 'text-blue-600 dark:text-blue-400 font-bold'
+                ? 'text-blue-600 dark:text-blue-400 font-bold scale-102'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
             }`}
           >
-            <Package className="w-5 h-5 mb-0.5" />
+            <div className="relative">
+              <Package className="w-5 h-5 mb-0.5" />
+              {lowStockCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+              )}
+            </div>
             <span className="text-[10px] leading-tight truncate w-full text-center">
-              {language === 'bn' ? 'পণ্য স্টক' : 'Items'}
+              {language === 'bn' ? 'পণ্য স্টক' : 'Stock'}
             </span>
           </button>
 
@@ -308,7 +312,7 @@ export function MobileBottomNav() {
             type="button"
             id="mobile-nav-menu"
             onClick={() => setIsMenuOpen(true)}
-            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-colors min-h-[46px] ${
+            className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all min-h-[46px] ${
               isMenuOpen
                 ? 'text-blue-600 dark:text-blue-400 font-bold'
                 : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'

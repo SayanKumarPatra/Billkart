@@ -57,7 +57,7 @@ ${business.tagline ? `_${business.tagline}_\n` : ''}📍 ${business.address}
 ${isBn ? 'ইনভয়েস নং' : 'Bill No'}: *#${bill.billNumber}*
 ${isBn ? 'তারিখ' : 'Date'}: ${bill.date} | ${bill.time}
 ${isBn ? 'ক্রেতার নাম' : 'Customer'}: *${bill.customerName}*
-${isBn ? 'মোবাইল' : 'Phone'}: ${bill.customerPhone}
+${isBn ? 'মোবাইল' : 'Phone'}: ${bill.customerPhone}${bill.customerAddress ? `\n📍 ${isBn ? 'ঠিকানা' : 'Address'}: ${bill.customerAddress}` : ''}
 ───────────────────────
 🛒 *${isBn ? 'পণ্যের বিবরণ (আইটেম)' : 'PURCHASED ITEMS'}:*
 ${itemsText}

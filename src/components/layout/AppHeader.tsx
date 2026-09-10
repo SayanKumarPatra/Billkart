@@ -15,7 +15,7 @@ import {
   Store
 } from 'lucide-react';
 import { useApp } from '../../contexts/AppContext';
-import { BillKartLogo } from '../BillKartLogo';
+import { BrandLogo } from '../common/BrandLogo';
 import { isSoundEnabled, toggleSoundEnabled, playBarcodeScanSuccess } from '../../utils/soundEffects';
 
 export function AppHeader() {
@@ -71,65 +71,54 @@ export function AppHeader() {
     help: t('navHelp'),
   };
 
-  return (
-    <header className="sticky top-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 py-2.5 select-none transition-colors">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
-        {/* Left: Mobile Brand Logo / Desktop Page Title */}
-        <div className="flex items-center gap-3">
-          <div className="lg:hidden">
-            <BillKartLogo size="sm" showTagline={false} horizontal={true} />
-          </div>
+  const LOGO_PRESETS: Record<string, { emoji: string; bg: string }> = {
+    grocery: { emoji: '🛒', bg: 'bg-emerald-500' },
+    general: { emoji: '🏪', bg: 'bg-blue-600' },
+    garments: { emoji: '👕', bg: 'bg-purple-600' },
+    mobile: { emoji: '📱', bg: 'bg-amber-500' },
+    pharmacy: { emoji: '💊', bg: 'bg-rose-500' },
+    restaurant: { emoji: '🍽️', bg: 'bg-orange-500' },
+    sweets: { emoji: '🥐', bg: 'bg-yellow-600' },
+    billkart: { emoji: '⚡', bg: 'bg-red-600' },
+  };
 
-          <div className="hidden lg:block">
-            <h1 className="text-base font-bold text-slate-900 dark:text-white font-display">
-              {viewTitles[currentView] || 'BillKart POS'}
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-xs">
-              {business.shopName || 'Retail Store'} • {business.address?.split(',')[0] || 'Kolkata'}
+  const shopPreset = business.logoUrl ? LOGO_PRESETS[business.logoUrl] : null;
+
+  return (
+    <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-3.5 py-2 select-none transition-colors shrink-0">
+      <div className="w-full flex items-center justify-between gap-2">
+        {/* Left: Mobile Brand & Store Identity */}
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="shrink-0">
+            {shopPreset ? (
+              <div className={`w-7 h-7 rounded-lg ${shopPreset.bg} text-white flex items-center justify-center text-sm shadow-2xs`}>
+                {shopPreset.emoji}
+              </div>
+            ) : (
+              <BrandLogo variant="icon" size="sm" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h1 className="text-xs font-black text-slate-900 dark:text-white truncate font-display">
+                {business.shopName || 'BillKart Store'}
+              </h1>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            </div>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+              {viewTitles[currentView] || 'স্মার্ট ক্যাশিয়ার'}
             </p>
           </div>
         </div>
 
-        {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5">
-          {/* Quick Camera Scan Trigger */}
-          <button
-            type="button"
-            onClick={openScanner}
-            title="Scan Barcode via Camera"
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-colors shadow-2xs"
-          >
-            <Barcode className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <span className="hidden sm:inline">Scan</span>
-          </button>
-
-          {/* Quick Create Bill / Cart Pill */}
-          <button
-            type="button"
-            onClick={() => setCurrentView('create-bill')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-              currentView === 'create-bill'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700'
-            }`}
-          >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Bill</span>
-            {cartItems.length > 0 && (
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                currentView === 'create-bill' ? 'bg-white text-blue-600' : 'bg-blue-600 text-white'
-              }`}>
-                {cartItems.length}
-              </span>
-            )}
-          </button>
-
-          {/* 1-Click Language Switcher Button */}
+        {/* Right: Clean Mobile Quick Action Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* 1-Click Language Switcher */}
           <button
             type="button"
             onClick={handleToggleLanguage}
-            title={language === 'bn' ? 'Switch interface to English' : 'ইন্টারফেস বাংলায় পরিবর্তন করুন'}
-            className="px-2 sm:px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all flex items-center gap-1 shadow-2xs"
+            title={language === 'bn' ? 'Switch to English' : 'বাংলায় পরিবর্তন করুন'}
+            className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition-all flex items-center gap-1 shadow-2xs"
           >
             <Globe className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
             <span className="text-[11px] font-bold">
@@ -141,7 +130,8 @@ export function AppHeader() {
           <button
             type="button"
             onClick={handleToggleTheme}
-            className="p-1.5 sm:px-2 sm:py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors"
+            title="Toggle theme"
+            className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors"
           >
             {themeMode === 'light' ? (
               <Sun className="w-4 h-4 text-amber-500" />
@@ -156,10 +146,10 @@ export function AppHeader() {
           <button
             type="button"
             onClick={handleToggleSound}
-            title={soundOn ? 'Audio feedback enabled' : 'Audio feedback muted'}
-            className="p-1.5 sm:p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            title={soundOn ? 'Audio sound on' : 'Audio sound muted'}
+            className="p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
           >
-            {soundOn ? <Volume2 className="w-4 h-4 text-blue-600 dark:text-blue-400" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
+            {soundOn ? <Volume2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> : <VolumeX className="w-4 h-4 text-slate-400" />}
           </button>
 
           {/* Notifications Flyout Trigger */}
@@ -167,7 +157,7 @@ export function AppHeader() {
             <button
               type="button"
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-1.5 sm:p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+              className="relative p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
             >
               <Bell className="w-4 h-4" />
               {unreadCount > 0 && (

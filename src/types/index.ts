@@ -46,6 +46,7 @@ export interface Bill {
   customerId: string;
   customerName: string;
   customerPhone: string;
+  customerAddress?: string;
   items: BillItem[];
   subtotal: number;
   discountAmount: number;

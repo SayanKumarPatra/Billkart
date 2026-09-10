@@ -177,14 +177,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return translations[language]?.[key] || translations.en[key] || '';
   };
 
-  // Navigation State - Full requested onboarding flow:
-  // Splash (প্রি-লোডিং) -> Guide (অনবোর্ডিং গাইড) -> Auth (লগইন/সাইন আপ) -> Business Setup (বিজনেস প্রোফাইল) -> POS Billing
+  // Navigation State: directly opens the mobile dashboard for ready POS operation
   const [currentView, setCurrentView] = useState<AppView>(() => {
-    const seenSplashInSession = typeof sessionStorage !== 'undefined' ? sessionStorage.getItem('billkart_session_started') : null;
-    if (!seenSplashInSession) {
-      try { sessionStorage.setItem('billkart_session_started', '1'); } catch (e) { /* ignore */ }
-      return 'splash';
-    }
     try {
       const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
       if (savedUser) {
@@ -192,9 +186,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (parsed.isAuthenticated && parsed.hasCompletedSetup) {
           return 'dashboard';
         }
+        if (!parsed.isAuthenticated) {
+          return 'auth';
+        }
       }
     } catch (e) { /* ignore */ }
-    return 'splash';
+    return 'dashboard';
   });
 
   // User State - Initialized fresh to Sayan Kumar Patra
@@ -226,7 +223,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { /* ignore */ }
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map((p: Product) => p.id));
+          const missing = INITIAL_PRODUCTS.filter(p => !existingIds.has(p.id));
+          if (missing.length > 0) {
+            return [...parsed, ...missing];
+          }
+          return parsed;
+        }
+      } catch (e) { /* ignore */ }
     }
     return INITIAL_PRODUCTS;
   });
@@ -552,6 +559,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       customerId: targetCustomer.id,
       customerName: targetCustomer.name,
       customerPhone: targetCustomer.phone,
+      customerAddress: targetCustomer.address || '',
       items: [...cartItems],
       subtotal: cartSubtotal,
       discountAmount: cartDiscountAmount,

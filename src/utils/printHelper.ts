@@ -164,6 +164,7 @@ function generateReceiptHtml(
       <td class="text-left">${isBn ? 'ক্রেতা' : 'Customer'}: <strong>${escapeHtml(bill.customerName)}</strong></td>
       <td class="text-right font-mono">${escapeHtml(bill.customerPhone)}</td>
     </tr>
+    ${bill.customerAddress ? `<tr><td colspan="2" class="text-left" style="font-size: 10px; color: #444;">${isBn ? 'ঠিকানা' : 'Address'}: ${escapeHtml(bill.customerAddress)}</td></tr>` : ''}
   </table>
 
   <!-- Items Table -->

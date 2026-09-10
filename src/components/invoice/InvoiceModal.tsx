@@ -426,6 +426,11 @@ export function InvoiceModal({ bill, isOpen, onClose }: InvoiceModalProps) {
             <div>
               <span className="text-slate-500 block">{isBn ? 'ক্রেতা:' : 'Customer:'}</span>
               <span className="font-semibold text-slate-800">{bill.customerName}</span>
+              {bill.customerAddress && (
+                <span className="text-[10px] text-slate-500 block truncate max-w-[160px]">
+                  📍 {bill.customerAddress}
+                </span>
+              )}
             </div>
             <div className="text-right">
               <span className="text-slate-500 block">{isBn ? 'মোবাইল:' : 'Phone:'}</span>

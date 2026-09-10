@@ -16,7 +16,8 @@ import {
   Sun,
   Moon,
   Monitor,
-  Palette
+  Palette,
+  LogOut
 } from 'lucide-react';
 import { useApp } from '../contexts/AppContext';
 import { playSound } from '../utils/audioHelper';
@@ -34,6 +35,7 @@ export function SettingsPage() {
     exportDataJSON, 
     restoreDataJSON, 
     resetToDefaultData,
+    logout,
     bills,
     language,
     setLanguage,
@@ -622,6 +624,43 @@ export function SettingsPage() {
               <span>টেস্ট শুনুন</span>
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* Shop Profile Setup & Mobile Account Switch */}
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800">
+          <Store className="w-4 h-4 text-blue-600" />
+          <div>
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+              {language === 'bn' ? 'দোকান নিবন্ধন ও মোবাইল একাউন্ট' : 'Shop Setup & Account'}
+            </h3>
+            <p className="text-[11px] text-slate-500">
+              {language === 'bn' ? 'দোকানের নাম, লোগো বদলান অথবা অন্য নম্বর দিয়ে লগইন করুন' : 'Change shop name, logo, or switch mobile'}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <button
+            type="button"
+            onClick={() => setCurrentView('business-setup')}
+            className="py-3 px-3 rounded-xl bg-blue-50 dark:bg-blue-950/60 hover:bg-blue-100 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-bold transition-all flex items-center justify-center gap-2"
+          >
+            <Store className="w-4 h-4" />
+            <span>{language === 'bn' ? 'দোকানের নাম ও লোগো পরিবর্তন' : 'Edit Shop & Logo'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+            }}
+            className="py-3 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4 text-rose-500" />
+            <span>{language === 'bn' ? 'মোবাইল একাউন্ট পরিবর্তন (লগআউট)' : 'Switch Mobile (Logout)'}</span>
+          </button>
         </div>
       </div>
 
